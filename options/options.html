@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Focus Blocker</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="m4.9 4.9 14.2 14.2" />
+          </svg>
+          <h1>Focus Blocker</h1>
+        </div>
+        <p class="subtitle">Mantenha o foco bloqueando sites que distraem</p>
+      </div>
+
+      <div class="main-section">
+        <form class="add-form" id="addForm">
+          <div class="input-group">
+            <input
+              type="text"
+              id="urlInput"
+              placeholder="Digite o site para bloquear (ex: youtube.com)"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button type="submit" class="add-btn" id="addBtn">Adicionar</button>
+          </div>
+        </form>
+
+        <div class="blocked-section">
+          <div class="section-title">
+            <span class="count" id="blockedCount">0</span> sites bloqueados
+          </div>
+
+          <div class="empty-state" id="emptyState">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v8" />
+              <path d="M8 12h8" />
+            </svg>
+            <p>Nenhum site bloqueado ainda</p>
+          </div>
+
+          <div class="blocked-list" id="blockedList">
+            <!-- Sites bloqueados serão inseridos aqui -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acesso Bloqueado - Focus Blocker</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="content">
+        <div class="blocked-icon">
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="m4.9 4.9 14.2 14.2" />
+          </svg>
+        </div>
+
+        <h1 class="title">Acesso Bloqueado</h1>
+        <p class="subtitle">
+          Este site foi bloqueado para ajudar você a manter o foco
+        </p>
+
+        <div class="blocked-url">
+          <span id="blockedSite">site-bloqueado.com</span>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-number" id="blocksToday">0</span>
+            <span class="stat-label">bloqueios hoje</span>
+          </div>
+          <div class="stat-divider">•</div>
+          <div class="stat">
+            <span class="stat-number" id="timeBlocked">0</span>
+            <span class="stat-label">min economizados</span>
+          </div>
+        </div>
+
+        <div class="quote">
+          <p id="motivationalText">
+            "O foco é a chave para transformar sonhos em realidade."
+          </p>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="goBack()">Voltar</button>
+          <button class="btn btn-secondary" onclick="openSettings()">
+            Configurações
+          </button>
+        </div>
+
+        <div class="footer">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="m4.9 4.9 14.2 14.2" />
+          </svg>
+          <span>Focus Blocker</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
