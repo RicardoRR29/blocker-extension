@@ -10,8 +10,11 @@
     "48": "src/icons/icon48.png",
     "128": "src/icons/icon128.png"
   },
-  "permissions": ["storage", "declarativeNetRequest"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
+  ],
   "background": {
     "service_worker": "src/background.js"
   },
@@ -45,7 +48,10 @@
         "src/theme-toggle/theme-toggle.js",
         "src/theme-toggle/theme-toggle.css"
       ],
-      "matches": ["<all_urls>"]
+      "matches": ["https://*/*", "http://*/*"]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }

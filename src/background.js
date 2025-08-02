@@ -1,13 +1,29 @@
+const SECRET_KEY = "focus-blocker-key";
+
+function xor(str) {
+  let result = "";
+  for (let i = 0; i < str.length; i++) {
+    result += String.fromCharCode(
+      str.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length)
+    );
+  }
+  return result;
+}
+
+function decrypt(text) {
+  return xor(atob(text));
+}
+
 chrome.runtime.onInstalled.addListener(async () => {
   const { blockedKeywords = [] } = await chrome.storage.local.get(
     "blockedKeywords"
   );
-  updateRules(blockedKeywords);
+  updateRules(blockedKeywords.map(decrypt));
 });
 
 chrome.storage.onChanged.addListener(({ blockedKeywords }) => {
   if (blockedKeywords) {
-    updateRules(blockedKeywords.newValue);
+    updateRules(blockedKeywords.newValue.map(decrypt));
   }
 });
 
