@@ -79,10 +79,12 @@ class FocusBlockerOptions {
     showToast(this.toastContainer, `${keyword} was unblocked`, "success");
   }
 
-  setLoading(loading) {
-    this.addBtn.disabled = loading;
-    this.addBtn.textContent = loading ? "Adding..." : "Add";
-  }
+    setLoading(loading) {
+      if (this.addBtn) {
+        this.addBtn.disabled = loading;
+        this.addBtn.textContent = loading ? "Adding..." : "Add";
+      }
+    }
 
   updateUI() {
     this.updateBlockedList();
@@ -121,9 +123,11 @@ class FocusBlockerOptions {
     return div;
   }
 
-  updateCount() {
-    this.blockedCount.textContent = this.blockedKeywords.length;
-  }
+    updateCount() {
+      if (this.blockedCount) {
+        this.blockedCount.textContent = this.blockedKeywords.length;
+      }
+    }
 
   toggleEmptyState() {
     if (this.blockedKeywords.length === 0) {

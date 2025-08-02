@@ -5,28 +5,7 @@
     <meta name="theme-color" content="#000000" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blocked Page</title>
-    <script>
-      (function () {
-        try {
-          const storedTheme = localStorage.getItem("focus-blocker-theme");
-          const systemPrefersDark = window.matchMedia(
-            "(prefers-color-scheme: dark)"
-          ).matches;
-          const theme = storedTheme || (systemPrefersDark ? "dark" : "light");
-          if (theme === "dark") {
-            document.documentElement.setAttribute("data-theme", "dark");
-            const meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute("content", "#000000");
-          } else {
-            document.documentElement.removeAttribute("data-theme");
-            const meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute("content", "#ffffff");
-          }
-        } catch (e) {
-          console.warn("Theme init failed:", e);
-        }
-      })();
-    </script>
+    <script src="../theme-toggle/theme-init.js"></script>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="../theme-toggle/theme-toggle.css" />
   </head>
