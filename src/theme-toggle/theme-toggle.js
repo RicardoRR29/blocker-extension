@@ -1,27 +1,44 @@
+const SECRET_KEY = "focus-blocker-key";
+
+function xor(str) {
+  let result = "";
+  for (let i = 0; i < str.length; i++) {
+    result += String.fromCharCode(
+      str.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length)
+    );
+  }
+  return result;
+}
+
+function encrypt(text) {
+  return btoa(xor(text));
+}
+
+function decrypt(text) {
+  return xor(atob(text));
+}
+
 class ThemeToggle {
   constructor() {
     this.toggleButton = document.getElementById("themeToggle");
-    this.currentTheme = this.getStoredTheme();
-
-    if (!this.currentTheme) {
-      this.currentTheme = this.getSystemTheme();
-      this.setStoredTheme(this.currentTheme);
-    }
-
     this.init();
   }
 
-  init() {
-    // Apply the current theme
+  async init() {
+    this.currentTheme = await this.getStoredTheme();
+
+    if (!this.currentTheme) {
+      this.currentTheme = this.getSystemTheme();
+      await this.setStoredTheme(this.currentTheme);
+    }
+
     this.applyTheme(this.currentTheme);
 
-    // Add event listener to toggle button
     if (this.toggleButton) {
       this.toggleButton.addEventListener("click", () => {
         this.toggleTheme();
       });
 
-      // Add keyboard support
       this.toggleButton.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -30,11 +47,10 @@ class ThemeToggle {
       });
     }
 
-    // Listen for system theme changes
     window
       .matchMedia("(prefers-color-scheme: dark)")
-      .addEventListener("change", (e) => {
-        if (!this.getStoredTheme()) {
+      .addEventListener("change", async (e) => {
+        if (!(await this.getStoredTheme())) {
           this.currentTheme = e.matches ? "dark" : "light";
           this.applyTheme(this.currentTheme);
         }
@@ -47,18 +63,23 @@ class ThemeToggle {
       : "light";
   }
 
-  getStoredTheme() {
+  async getStoredTheme() {
     try {
-      return localStorage.getItem("focus-blocker-theme");
+      const { "focus-blocker-theme": theme } = await chrome.storage.local.get(
+        "focus-blocker-theme"
+      );
+      return theme ? decrypt(theme) : null;
     } catch (error) {
-      console.warn("localStorage não está disponível:", error);
+      console.warn("chrome.storage não está disponível:", error);
       return null;
     }
   }
 
-  setStoredTheme(theme) {
+  async setStoredTheme(theme) {
     try {
-      localStorage.setItem("focus-blocker-theme", theme);
+      await chrome.storage.local.set({
+        "focus-blocker-theme": encrypt(theme),
+      });
     } catch (error) {
       console.warn("Não foi possível salvar o tema:", error);
     }
@@ -108,7 +129,7 @@ class ThemeToggle {
     this.currentTheme = theme;
   }
 
-  toggleTheme() {
+  async toggleTheme() {
     const newTheme = this.currentTheme === "light" ? "dark" : "light";
 
     // Add a subtle animation effect
@@ -121,7 +142,7 @@ class ThemeToggle {
     }
 
     this.applyTheme(newTheme);
-    this.setStoredTheme(newTheme);
+    await this.setStoredTheme(newTheme);
 
     // Dispatch custom event for other components that might need to know about theme changes
     window.dispatchEvent(
@@ -137,10 +158,10 @@ class ThemeToggle {
   }
 
   // Public method to set theme programmatically
-  setTheme(theme) {
+  async setTheme(theme) {
     if (theme === "light" || theme === "dark") {
       this.applyTheme(theme);
-      this.setStoredTheme(theme);
+      await this.setStoredTheme(theme);
     }
   }
 }
