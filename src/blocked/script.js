@@ -11,14 +11,15 @@ class BlockedPage {
     this.startStatsAnimation();
   }
 
-  displayRandomQuote() {
-    const quoteElement = document.getElementById("motivationalText");
-    const randomQuote =
-      this.motivationalQuotes[
-        Math.floor(Math.random() * this.motivationalQuotes.length)
-      ];
-    quoteElement.textContent = `"${randomQuote}"`;
-  }
+    displayRandomQuote() {
+      const quoteElement = document.getElementById("motivationalText");
+      if (!quoteElement) return;
+      const randomQuote =
+        this.motivationalQuotes[
+          Math.floor(Math.random() * this.motivationalQuotes.length)
+        ];
+      quoteElement.textContent = `"${randomQuote}"`;
+    }
 
   async updateStats() {
     try {
