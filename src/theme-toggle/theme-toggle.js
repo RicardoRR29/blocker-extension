@@ -1,7 +1,11 @@
 class ThemeToggle {
   constructor() {
     this.toggleButton = document.getElementById("themeToggle");
-    this.currentTheme = this.getStoredTheme() || this.getSystemTheme();
+    this.currentTheme = this.getStoredTheme() || "dark";
+
+    if (!this.getStoredTheme()) {
+      this.setStoredTheme(this.currentTheme);
+    }
 
     this.init();
   }
