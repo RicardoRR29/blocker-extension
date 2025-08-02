@@ -1,3 +1,13 @@
 export function normalizeUrl(url) {
-  return url.trim().toLowerCase();
+  const trimmed = url.trim().toLowerCase();
+  if (!trimmed) return "";
+
+  try {
+    const parsed = new URL(
+      trimmed.startsWith("http") ? trimmed : `https://${trimmed}`
+    );
+    return parsed.hostname;
+  } catch {
+    return "";
+  }
 }

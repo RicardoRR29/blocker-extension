@@ -48,6 +48,13 @@ class FocusBlockerOptions {
       return;
     }
 
+    const origin = `*://${keyword}/*`;
+    const granted = await chrome.permissions.request({ origins: [origin] });
+    if (!granted) {
+      showToast(this.toastContainer, "Permission denied", "warning");
+      return;
+    }
+
     this.setLoading(true);
 
     const blockedKeywords = await getBlockedKeywords();
@@ -73,6 +80,8 @@ class FocusBlockerOptions {
     const blockedKeywords = await getBlockedKeywords();
     blockedKeywords.splice(index, 1);
     await setBlockedKeywords(blockedKeywords);
+
+    chrome.permissions.remove({ origins: [`*://${keyword}/*`] });
 
     this.blockedKeywords = blockedKeywords;
     this.updateUI();
@@ -102,25 +111,40 @@ class FocusBlockerOptions {
   }
 
   createBlockedItemElement(item, index) {
-    const div = document.createElement("div");
-    div.className = "blocked-item";
+    const container = document.createElement("div");
+    container.className = "blocked-item";
 
-    div.innerHTML = `
-      <div class="blocked-item-url">${item}</div>
-      <button class="remove-btn" title="Remove">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 6L6 18"/>
-          <path d="M6 6l12 12"/>
-        </svg>
-      </button>
-    `;
+    const urlDiv = document.createElement("div");
+    urlDiv.className = "blocked-item-url";
+    urlDiv.textContent = item;
+    container.appendChild(urlDiv);
 
-    const removeBtn = div.querySelector(".remove-btn");
-    removeBtn.addEventListener("click", () => {
+    const button = document.createElement("button");
+    button.className = "remove-btn";
+    button.title = "Remove";
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "16");
+    svg.setAttribute("height", "16");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+
+    const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path1.setAttribute("d", "M18 6L6 18");
+    const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path2.setAttribute("d", "M6 6l12 12");
+
+    svg.append(path1, path2);
+    button.appendChild(svg);
+    button.addEventListener("click", () => {
       this.removeUrl(index);
     });
 
-    return div;
+    container.appendChild(button);
+
+    return container;
   }
 
     updateCount() {
