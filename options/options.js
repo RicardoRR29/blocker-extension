@@ -44,7 +44,7 @@ class FocusBlockerOptions {
     const keyword = this.normalizeUrl(this.urlInput.value);
 
     if (!keyword) {
-      this.showToast("Digite um site para bloquear", "warning");
+      this.showToast("Enter a site to block", "warning");
       return;
     }
 
@@ -58,9 +58,9 @@ class FocusBlockerOptions {
       this.blockedKeywords = blockedKeywords;
       this.updateUI();
       this.urlInput.value = "";
-      this.showToast(`${keyword} foi bloqueado`, "success");
+      this.showToast(`${keyword} was blocked`, "success");
     } else {
-      this.showToast("Este site já está bloqueado", "warning");
+      this.showToast("This site is already blocked", "warning");
     }
 
     this.setLoading(false);
@@ -76,12 +76,12 @@ class FocusBlockerOptions {
 
     this.blockedKeywords = blockedKeywords;
     this.updateUI();
-    this.showToast(`${keyword} foi desbloqueado`, "success");
+    this.showToast(`${keyword} was unblocked`, "success");
   }
 
   setLoading(loading) {
     this.addBtn.disabled = loading;
-    this.addBtn.textContent = loading ? "Adicionando..." : "Adicionar";
+    this.addBtn.textContent = loading ? "Adding..." : "Add";
   }
 
   updateUI() {
@@ -105,7 +105,7 @@ class FocusBlockerOptions {
 
     div.innerHTML = `
       <div class="blocked-item-url">${item}</div>
-      <button class="remove-btn" title="Remover">
+      <button class="remove-btn" title="Remove">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6L6 18"/>
           <path d="M6 6l12 12"/>
@@ -164,7 +164,7 @@ class FocusBlockerOptions {
   }
 }
 
-// Inicializar
+// Initialize
 document.addEventListener("DOMContentLoaded", () => {
   window.focusBlocker = new FocusBlockerOptions();
 });
