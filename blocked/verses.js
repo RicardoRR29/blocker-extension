@@ -1,5 +1,5 @@
-// Lista de versículos exibidos na página de bloqueio
-// Mantida como variável global para uso em script.js
+// List of verses displayed on the block page
+// Kept as a global variable for use in script.js
 window.motivationalQuotes = [
   'Ephesians 2:8-9 — "For by grace you have been saved through faith, and this is not from yourselves, it is the gift of God; not by works, so that no one can boast."',
   'John 3:16 — "For God so loved the world that He gave His one and only Son, that whoever believes in Him shall not perish but have eternal life."',
