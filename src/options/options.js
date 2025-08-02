@@ -19,9 +19,9 @@ class FocusBlockerOptions {
   }
 
   bindEvents() {
-    this.addBtn.onclick = () => {
+    this.addBtn.addEventListener("click", () => {
       this.addUrl();
-    };
+    });
 
     this.addForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -114,9 +114,9 @@ class FocusBlockerOptions {
     `;
 
     const removeBtn = div.querySelector(".remove-btn");
-    removeBtn.onclick = () => {
+    removeBtn.addEventListener("click", () => {
       this.removeUrl(index);
-    };
+    });
 
     return div;
   }
