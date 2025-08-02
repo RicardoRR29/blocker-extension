@@ -1,9 +1,10 @@
 class ThemeToggle {
   constructor() {
     this.toggleButton = document.getElementById("themeToggle");
-    this.currentTheme = this.getStoredTheme() || "dark";
+    this.currentTheme = this.getStoredTheme();
 
-    if (!this.getStoredTheme()) {
+    if (!this.currentTheme) {
+      this.currentTheme = this.getSystemTheme();
       this.setStoredTheme(this.currentTheme);
     }
 
@@ -64,6 +65,21 @@ class ThemeToggle {
   }
 
   applyTheme(theme) {
+    const currentAttr =
+      document.documentElement.getAttribute("data-theme") || "light";
+    if (currentAttr === theme) {
+      if (this.toggleButton) {
+        this.toggleButton.setAttribute(
+          "aria-label",
+          theme === "dark"
+            ? "Alternar para modo claro"
+            : "Alternar para modo escuro"
+        );
+      }
+      this.currentTheme = theme;
+      return;
+    }
+
     // Remove any existing theme attribute
     document.documentElement.removeAttribute("data-theme");
 
@@ -76,13 +92,16 @@ class ThemeToggle {
           "Alternar para modo claro"
         );
       }
-    } else {
-      if (this.toggleButton) {
-        this.toggleButton.setAttribute(
-          "aria-label",
-          "Alternar para modo escuro"
-        );
-      }
+    } else if (this.toggleButton) {
+      this.toggleButton.setAttribute(
+        "aria-label",
+        "Alternar para modo escuro"
+      );
+    }
+
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", theme === "dark" ? "#000000" : "#ffffff");
     }
 
     // Update current theme
