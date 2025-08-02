@@ -23,7 +23,8 @@ class FocusBlockerOptions {
   }
 
   bindEvents() {
-    this.addBtn.addEventListener("click", () => {
+    this.addBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       this.addUrl();
     });
 
@@ -42,7 +43,6 @@ class FocusBlockerOptions {
 
   async addUrl() {
     const keyword = normalizeUrl(this.urlInput.value);
-
     if (!keyword) {
       showToast(this.toastContainer, "Enter a site to block", "warning");
       return;
@@ -88,12 +88,12 @@ class FocusBlockerOptions {
     showToast(this.toastContainer, `${keyword} was unblocked`, "success");
   }
 
-    setLoading(loading) {
-      if (this.addBtn) {
-        this.addBtn.disabled = loading;
-        this.addBtn.textContent = loading ? "Adding..." : "Add";
-      }
+  setLoading(loading) {
+    if (this.addBtn) {
+      this.addBtn.disabled = loading;
+      this.addBtn.textContent = loading ? "Adding..." : "Add";
     }
+  }
 
   updateUI() {
     this.updateBlockedList();
@@ -131,9 +131,15 @@ class FocusBlockerOptions {
     svg.setAttribute("stroke", "currentColor");
     svg.setAttribute("stroke-width", "2");
 
-    const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const path1 = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "path"
+    );
     path1.setAttribute("d", "M18 6L6 18");
-    const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const path2 = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "path"
+    );
     path2.setAttribute("d", "M6 6l12 12");
 
     svg.append(path1, path2);
@@ -147,11 +153,11 @@ class FocusBlockerOptions {
     return container;
   }
 
-    updateCount() {
-      if (this.blockedCount) {
-        this.blockedCount.textContent = this.blockedKeywords.length;
-      }
+  updateCount() {
+    if (this.blockedCount) {
+      this.blockedCount.textContent = this.blockedKeywords.length;
     }
+  }
 
   toggleEmptyState() {
     if (this.blockedKeywords.length === 0) {
