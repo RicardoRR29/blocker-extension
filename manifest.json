@@ -36,12 +36,16 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/blocked/blocked.html"],
+      "resources": [
+        "src/blocked/blocked.html",
+        "src/blocked/verses.js",
+        "src/blocked/script.js",
+        "src/blocked/styles.css",
+        "src/theme-toggle/theme-init.js",
+        "src/theme-toggle/theme-toggle.js",
+        "src/theme-toggle/theme-toggle.css"
+      ],
       "matches": ["<all_urls>"]
     }
   ]
-  ,
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'unsafe-inline'; object-src 'self'"
-  }
 }
