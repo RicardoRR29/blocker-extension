@@ -81,8 +81,6 @@ class FocusBlockerOptions {
     blockedKeywords.splice(index, 1);
     await setBlockedKeywords(blockedKeywords);
 
-    chrome.permissions.remove({ origins: [`*://${keyword}/*`] });
-
     this.blockedKeywords = blockedKeywords;
     this.updateUI();
     showToast(this.toastContainer, `${keyword} was unblocked`, "success");
