@@ -306,7 +306,7 @@ body {
   }
 }
 
-/* Altura mínima para telas muito pequenas */
+/* Minimum height for very small screens */
 @media (max-height: 600px) {
   .content {
     position: static;

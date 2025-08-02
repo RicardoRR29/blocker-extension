@@ -17,13 +17,13 @@ class BlockedPage {
 
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const blockedSite =
-        urlParams.get("site") ||
-        window.location.hostname ||
-        "site-bloqueado.com";
-      blockedSiteElement.textContent = blockedSite;
-    } catch (error) {
-      blockedSiteElement.textContent = "site-bloqueado.com";
+        const blockedSite =
+          urlParams.get("site") ||
+          window.location.hostname ||
+          "blocked-site.com";
+        blockedSiteElement.textContent = blockedSite;
+      } catch (error) {
+        blockedSiteElement.textContent = "blocked-site.com";
     }
   }
 
@@ -52,7 +52,7 @@ class BlockedPage {
       await window.chrome.storage.local.set({ blockedStats: stats });
       this.displayStats(stats[today]);
     } catch (error) {
-      console.error("Erro ao atualizar estatísticas:", error);
+        console.error("Error updating statistics:", error);
       this.displayStats({ blocks: 1, timeBlocked: 5 });
     }
   }
@@ -87,7 +87,7 @@ class BlockedPage {
   }
 }
 
-// Funções globais para os botões
+  // Global functions for buttons
 function goBack() {
   if (window.history.length > 1) {
     window.history.back();
@@ -100,14 +100,14 @@ function openSettings() {
   try {
     window.chrome.runtime.openOptionsPage();
   } catch (error) {
-    console.error("Não foi possível abrir as configurações:", error);
+    console.error("Could not open settings:", error);
     alert(
-      "Para acessar as configurações, clique no ícone da extensão na barra de ferramentas."
+      "To access the settings, click the extension icon in the toolbar."
     );
   }
 }
 
-// Inicializar
+  // Initialize
 document.addEventListener("DOMContentLoaded", () => {
   new BlockedPage();
 });

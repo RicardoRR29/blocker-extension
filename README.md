@@ -1,33 +1,33 @@
 # Focus Blocker
 
-Extensão para Chrome que bloqueia sites que distraem e ajuda a manter o foco.
+Chrome extension that blocks distracting sites and helps maintain focus.
 
-## Recursos
+## Features
 
-- Bloqueio de sites por palavra‑chave usando a API `declarativeNetRequest`.
-- Página de configurações para adicionar ou remover sites bloqueados.
-- Página de bloqueio com estatísticas diárias e frases motivacionais.
-- Dados armazenados localmente usando `chrome.storage`.
+- Site blocking by keyword using the `declarativeNetRequest` API.
+- Settings page to add or remove blocked sites.
+- Block page with daily statistics and motivational quotes.
+- Data stored locally using `chrome.storage`.
 
-## Instalação
+## Installation
 
-1. Baixe ou clone este repositório.
-2. No Chrome, acesse `chrome://extensions`.
-3. Ative o **Modo do desenvolvedor**.
-4. Clique em **Carregar sem compactação** e selecione a pasta do projeto.
+1. Download or clone this repository.
+2. In Chrome, go to `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the project folder.
 
-## Uso
+## Usage
 
-- Para bloquear um site, abra a página de opções da extensão e adicione o endereço desejado.
-- Ao tentar acessar um site bloqueado, a extensão redireciona para uma página de aviso com estatísticas e mensagens motivacionais.
+- To block a site, open the extension options page and add the desired address.
+- When attempting to access a blocked site, the extension redirects to a warning page with statistics and motivational messages.
 
-## Estrutura do projeto
+## Project Structure
 
-- `manifest.json`: definições da extensão.
-- `background.js`: gerenciamento dinâmico de regras de bloqueio.
-- `options/`: interface para configurar sites bloqueados.
-- `blocked/`: página exibida quando um site é bloqueado.
+- `manifest.json`: extension definitions.
+- `background.js`: dynamic rule management.
+- `options/`: interface for configuring blocked sites.
+- `blocked/`: page displayed when a site is blocked.
 
-## Contribuições
+## Contributions
 
-Sinta‑se à vontade para abrir issues e pull requests com melhorias ou correções.
+Feel free to open issues and pull requests with improvements or fixes.
