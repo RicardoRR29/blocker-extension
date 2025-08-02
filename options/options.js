@@ -8,7 +8,7 @@ class FocusBlockerOptions {
     this.blockedCount = document.getElementById("blockedCount");
     this.toastContainer = document.getElementById("toastContainer");
 
-    this.blockedUrls = [];
+    this.blockedKeywords = [];
 
     this.init();
   }
@@ -16,7 +16,6 @@ class FocusBlockerOptions {
   init() {
     this.loadBlockedUrls();
     this.bindEvents();
-    this.updateUI();
   }
 
   bindEvents() {
@@ -41,8 +40,8 @@ class FocusBlockerOptions {
     return url.trim().toLowerCase();
   }
 
-  addUrl() {
-    const keyword = this.urlInput.value.trim().toLowerCase();
+  async addUrl() {
+    const keyword = this.normalizeUrl(this.urlInput.value);
 
     if (!keyword) {
       this.showToast("Digite um site para bloquear", "warning");
@@ -51,46 +50,33 @@ class FocusBlockerOptions {
 
     this.setLoading(true);
 
-    window.chrome.storage.local.get(
-      "blockedKeywords",
-      ({ blockedKeywords }) => {
-        blockedKeywords = blockedKeywords || [];
+    const blockedKeywords = await this.getBlockedKeywords();
 
-        if (!blockedKeywords.includes(keyword)) {
-          blockedKeywords.push(keyword);
+    if (!blockedKeywords.includes(keyword)) {
+      blockedKeywords.push(keyword);
+      await this.setBlockedKeywords(blockedKeywords);
+      this.blockedKeywords = blockedKeywords;
+      this.updateUI();
+      this.urlInput.value = "";
+      this.showToast(`${keyword} foi bloqueado`, "success");
+    } else {
+      this.showToast("Este site já está bloqueado", "warning");
+    }
 
-          window.chrome.storage.local.set({ blockedKeywords }, () => {
-            this.blockedUrls = blockedKeywords;
-            this.updateUI();
-            this.urlInput.value = "";
-            this.showToast(`${keyword} foi bloqueado`, "success");
-            this.setLoading(false);
-          });
-        } else {
-          this.showToast("Este site já está bloqueado", "warning");
-          this.setLoading(false);
-        }
-      }
-    );
+    this.setLoading(false);
   }
 
-  removeUrl(index) {
-    const item = this.blockedUrls[index];
-    if (!item) return;
+  async removeUrl(index) {
+    const keyword = this.blockedKeywords[index];
+    if (!keyword) return;
 
-    window.chrome.storage.local.get(
-      "blockedKeywords",
-      ({ blockedKeywords }) => {
-        blockedKeywords = blockedKeywords || [];
-        blockedKeywords.splice(index, 1);
+    const blockedKeywords = await this.getBlockedKeywords();
+    blockedKeywords.splice(index, 1);
+    await this.setBlockedKeywords(blockedKeywords);
 
-        window.chrome.storage.local.set({ blockedKeywords }, () => {
-          this.blockedUrls = blockedKeywords;
-          this.updateUI();
-          this.showToast(`${item} foi desbloqueado`, "success");
-        });
-      }
-    );
+    this.blockedKeywords = blockedKeywords;
+    this.updateUI();
+    this.showToast(`${keyword} foi desbloqueado`, "success");
   }
 
   setLoading(loading) {
@@ -107,7 +93,7 @@ class FocusBlockerOptions {
   updateBlockedList() {
     this.blockedList.innerHTML = "";
 
-    this.blockedUrls.forEach((item, index) => {
+    this.blockedKeywords.forEach((item, index) => {
       const element = this.createBlockedItemElement(item, index);
       this.blockedList.appendChild(element);
     });
@@ -136,11 +122,11 @@ class FocusBlockerOptions {
   }
 
   updateCount() {
-    this.blockedCount.textContent = this.blockedUrls.length;
+    this.blockedCount.textContent = this.blockedKeywords.length;
   }
 
   toggleEmptyState() {
-    if (this.blockedUrls.length === 0) {
+    if (this.blockedKeywords.length === 0) {
       this.emptyState.style.display = "block";
       this.blockedList.style.display = "none";
     } else {
@@ -163,14 +149,18 @@ class FocusBlockerOptions {
     }, 3000);
   }
 
-  loadBlockedUrls() {
-    window.chrome.storage.local.get(
-      "blockedKeywords",
-      ({ blockedKeywords }) => {
-        this.blockedUrls = blockedKeywords || [];
-        this.updateUI();
-      }
-    );
+  async loadBlockedUrls() {
+    this.blockedKeywords = await this.getBlockedKeywords();
+    this.updateUI();
+  }
+
+  async getBlockedKeywords() {
+    const { blockedKeywords = [] } = await chrome.storage.local.get("blockedKeywords");
+    return blockedKeywords;
+  }
+
+  setBlockedKeywords(keywords) {
+    return chrome.storage.local.set({ blockedKeywords: keywords });
   }
 }
 
@@ -178,13 +168,3 @@ class FocusBlockerOptions {
 document.addEventListener("DOMContentLoaded", () => {
   window.focusBlocker = new FocusBlockerOptions();
 });
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    if (!window.focusBlocker) {
-      window.focusBlocker = new FocusBlockerOptions();
-    }
-  });
-} else {
-  window.focusBlocker = new FocusBlockerOptions();
-}
