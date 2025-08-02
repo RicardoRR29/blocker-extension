@@ -1,3 +1,7 @@
+import { getBlockedKeywords, setBlockedKeywords } from "./storage.js";
+import { showToast } from "./toast.js";
+import { normalizeUrl } from "./utils.js";
+
 class FocusBlockerOptions {
   constructor() {
     this.urlInput = document.getElementById("urlInput");
@@ -36,31 +40,27 @@ class FocusBlockerOptions {
     });
   }
 
-  normalizeUrl(url) {
-    return url.trim().toLowerCase();
-  }
-
   async addUrl() {
-    const keyword = this.normalizeUrl(this.urlInput.value);
+    const keyword = normalizeUrl(this.urlInput.value);
 
     if (!keyword) {
-      this.showToast("Enter a site to block", "warning");
+      showToast(this.toastContainer, "Enter a site to block", "warning");
       return;
     }
 
     this.setLoading(true);
 
-    const blockedKeywords = await this.getBlockedKeywords();
+    const blockedKeywords = await getBlockedKeywords();
 
     if (!blockedKeywords.includes(keyword)) {
       blockedKeywords.push(keyword);
-      await this.setBlockedKeywords(blockedKeywords);
+      await setBlockedKeywords(blockedKeywords);
       this.blockedKeywords = blockedKeywords;
       this.updateUI();
       this.urlInput.value = "";
-      this.showToast(`${keyword} was blocked`, "success");
+      showToast(this.toastContainer, `${keyword} was blocked`, "success");
     } else {
-      this.showToast("This site is already blocked", "warning");
+      showToast(this.toastContainer, "This site is already blocked", "warning");
     }
 
     this.setLoading(false);
@@ -70,13 +70,13 @@ class FocusBlockerOptions {
     const keyword = this.blockedKeywords[index];
     if (!keyword) return;
 
-    const blockedKeywords = await this.getBlockedKeywords();
+    const blockedKeywords = await getBlockedKeywords();
     blockedKeywords.splice(index, 1);
-    await this.setBlockedKeywords(blockedKeywords);
+    await setBlockedKeywords(blockedKeywords);
 
     this.blockedKeywords = blockedKeywords;
     this.updateUI();
-    this.showToast(`${keyword} was unblocked`, "success");
+    showToast(this.toastContainer, `${keyword} was unblocked`, "success");
   }
 
   setLoading(loading) {
@@ -135,32 +135,9 @@ class FocusBlockerOptions {
     }
   }
 
-  showToast(message, type = "success") {
-    const toast = document.createElement("div");
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-
-    this.toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 3000);
-  }
-
   async loadBlockedUrls() {
-    this.blockedKeywords = await this.getBlockedKeywords();
+    this.blockedKeywords = await getBlockedKeywords();
     this.updateUI();
-  }
-
-  async getBlockedKeywords() {
-    const { blockedKeywords = [] } = await chrome.storage.local.get("blockedKeywords");
-    return blockedKeywords;
-  }
-
-  setBlockedKeywords(keywords) {
-    return chrome.storage.local.set({ blockedKeywords: keywords });
   }
 }
 
