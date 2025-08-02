@@ -2,9 +2,9 @@
   <!-- Rounded white background -->
   <rect x="0" y="0" width="24" height="24" rx="3" ry="3" fill="white"></rect>
 
-  <!-- Red stroked circle -->
-  <circle cx="12" cy="12" r="10" fill="none" stroke="red" stroke-width="2"></circle>
+  <!-- Blue stroked circle -->
+  <circle cx="12" cy="12" r="10" fill="none" stroke="#2563eb" stroke-width="2"></circle>
 
-  <!-- Diagonal line -->
-  <path d="M4.9 4.9 L19.1 19.1" stroke="red" stroke-width="2"></path>
+  <!-- Diagonal blue line -->
+  <path d="M4.9 4.9 L19.1 19.1" stroke="#2563eb" stroke-width="2"></path>
 </svg>
