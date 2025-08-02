@@ -6,25 +6,9 @@ class BlockedPage {
   }
 
   init() {
-    this.displayBlockedSite();
     this.displayRandomQuote();
     this.updateStats();
     this.startStatsAnimation();
-  }
-
-  displayBlockedSite() {
-    const blockedSiteElement = document.getElementById("blockedSite");
-
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-        const blockedSite =
-          urlParams.get("site") ||
-          window.location.hostname ||
-          "blocked-site.com";
-        blockedSiteElement.textContent = blockedSite;
-      } catch (error) {
-        blockedSiteElement.textContent = "blocked-site.com";
-    }
   }
 
   displayRandomQuote() {
@@ -52,7 +36,7 @@ class BlockedPage {
       await window.chrome.storage.local.set({ blockedStats: stats });
       this.displayStats(stats[today]);
     } catch (error) {
-        console.error("Error updating statistics:", error);
+      console.error("Error updating statistics:", error);
       this.displayStats({ blocks: 1, timeBlocked: 5 });
     }
   }
@@ -87,7 +71,7 @@ class BlockedPage {
   }
 }
 
-  // Global functions for buttons
+// Global functions for buttons
 function goBack() {
   if (window.history.length > 1) {
     window.history.back();
@@ -101,13 +85,11 @@ function openSettings() {
     window.chrome.runtime.openOptionsPage();
   } catch (error) {
     console.error("Could not open settings:", error);
-    alert(
-      "To access the settings, click the extension icon in the toolbar."
-    );
+    alert("To access the settings, click the extension icon in the toolbar.");
   }
 }
 
-  // Initialize
+// Initialize
 document.addEventListener("DOMContentLoaded", () => {
   new BlockedPage();
 });
