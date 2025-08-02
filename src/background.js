@@ -1,5 +1,7 @@
 chrome.runtime.onInstalled.addListener(async () => {
-  const { blockedKeywords = [] } = await chrome.storage.local.get("blockedKeywords");
+  const { blockedKeywords = [] } = await chrome.storage.local.get(
+    "blockedKeywords"
+  );
   updateRules(blockedKeywords);
 });
 
@@ -22,7 +24,7 @@ async function updateRules(keywords = []) {
     priority: 1,
     action: {
       type: "redirect",
-      redirect: { extensionPath: "/blocked/blocked.html" },
+      redirect: { extensionPath: "/src/blocked/blocked.html" },
     },
     condition: {
       urlFilter: keyword,
