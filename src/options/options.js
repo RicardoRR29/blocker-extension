@@ -6,6 +6,7 @@ class FocusBlockerOptions {
   constructor() {
     this.urlInput = document.getElementById("urlInput");
     this.addBtn = document.getElementById("addBtn");
+    this.blockCurrentBtn = document.getElementById("blockCurrent");
     this.addForm = document.getElementById("addForm");
     this.blockedList = document.getElementById("blockedList");
     this.emptyState = document.getElementById("emptyState");
@@ -39,10 +40,17 @@ class FocusBlockerOptions {
         this.addUrl();
       }
     });
+
+    if (this.blockCurrentBtn) {
+      this.blockCurrentBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.addCurrentSite();
+      });
+    }
   }
 
-  async addUrl() {
-    const keyword = normalizeUrl(this.urlInput.value);
+  async addUrl(keywordParam) {
+    const keyword = normalizeUrl(keywordParam ?? this.urlInput.value);
     if (!keyword) {
       showToast(this.toastContainer, "Enter a site to block", "warning");
       return;
@@ -64,13 +72,32 @@ class FocusBlockerOptions {
       await setBlockedKeywords(blockedKeywords);
       this.blockedKeywords = blockedKeywords;
       this.updateUI();
-      this.urlInput.value = "";
+      if (!keywordParam) {
+        this.urlInput.value = "";
+      }
       showToast(this.toastContainer, `${keyword} was blocked`, "success");
     } else {
       showToast(this.toastContainer, "This site is already blocked", "warning");
     }
 
     this.setLoading(false);
+  }
+
+  async addCurrentSite() {
+    const granted = await chrome.permissions.request({ permissions: ["tabs"] });
+    if (!granted) {
+      showToast(this.toastContainer, "Permission denied", "warning");
+      return;
+    }
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const keyword = tab?.url ? normalizeUrl(tab.url) : "";
+    if (!keyword) {
+      showToast(this.toastContainer, "Unable to block this site", "warning");
+      return;
+    }
+
+    await this.addUrl(keyword);
   }
 
   async removeUrl(index) {
@@ -90,6 +117,12 @@ class FocusBlockerOptions {
     if (this.addBtn) {
       this.addBtn.disabled = loading;
       this.addBtn.textContent = loading ? "Adding..." : "Add";
+    }
+    if (this.blockCurrentBtn) {
+      this.blockCurrentBtn.disabled = loading;
+      this.blockCurrentBtn.textContent = loading
+        ? "Adding..."
+        : "Block this site";
     }
   }
 
