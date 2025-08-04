@@ -131,6 +131,10 @@ body {
   cursor: not-allowed;
 }
 
+.block-current-btn {
+  margin-top: 0.5rem;
+}
+
 /* Blocked Section */
 .blocked-section {
   border-top: 1px solid var(--border-light);
