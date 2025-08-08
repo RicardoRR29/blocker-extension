@@ -1,3 +1,5 @@
+const browser = globalThis.browser || globalThis.chrome;
+
 function xor(str) {
   let result = "";
   for (let i = 0; i < str.length; i++) {
@@ -17,7 +19,7 @@ function decrypt(text) {
 }
 
 export async function getBlockedKeywords() {
-  const { blockedKeywords = [] } = await chrome.storage.local.get(
+  const { blockedKeywords = [] } = await browser.storage.local.get(
     "blockedKeywords"
   );
   return blockedKeywords.map(decrypt);
@@ -25,5 +27,5 @@ export async function getBlockedKeywords() {
 
 export function setBlockedKeywords(keywords) {
   const encrypted = keywords.map(encrypt);
-  return chrome.storage.local.set({ blockedKeywords: encrypted });
+  return browser.storage.local.set({ blockedKeywords: encrypted });
 }

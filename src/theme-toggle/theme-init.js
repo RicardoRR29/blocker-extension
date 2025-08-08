@@ -1,4 +1,5 @@
 const SECRET_KEY = "focus-blocker-key";
+const browser = globalThis.browser || globalThis.chrome;
 
 function xor(str) {
   let result = "";
@@ -16,7 +17,7 @@ function decrypt(text) {
 
 (function () {
   try {
-    chrome.storage.local.get("focus-blocker-theme", (data) => {
+    browser.storage.local.get("focus-blocker-theme", (data) => {
       let storedTheme = data["focus-blocker-theme"];
       if (storedTheme) {
         try {

@@ -1,6 +1,7 @@
 import { getBlockedKeywords, setBlockedKeywords } from "./storage.js";
 import { showToast } from "./toast.js";
 import { normalizeUrl } from "./utils.js";
+const browser = globalThis.browser || globalThis.chrome;
 
 class FocusBlockerOptions {
   constructor() {
@@ -57,7 +58,7 @@ class FocusBlockerOptions {
     }
 
     const origin = `*://${keyword}/*`;
-    const granted = await chrome.permissions.request({ origins: [origin] });
+    const granted = await browser.permissions.request({ origins: [origin] });
     if (!granted) {
       showToast(this.toastContainer, "Permission denied", "warning");
       return;
@@ -84,13 +85,13 @@ class FocusBlockerOptions {
   }
 
   async addCurrentSite() {
-    const granted = await chrome.permissions.request({ permissions: ["tabs"] });
+    const granted = await browser.permissions.request({ permissions: ["tabs"] });
     if (!granted) {
       showToast(this.toastContainer, "Permission denied", "warning");
       return;
     }
 
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
     const keyword = tab?.url ? normalizeUrl(tab.url) : "";
     if (!keyword) {
       showToast(this.toastContainer, "Unable to block this site", "warning");

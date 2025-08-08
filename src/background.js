@@ -1,4 +1,5 @@
 const SECRET_KEY = "focus-blocker-key";
+const browser = globalThis.browser || globalThis.chrome;
 
 function xor(str) {
   let result = "";
@@ -14,24 +15,24 @@ function decrypt(text) {
   return xor(atob(text));
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
-  const { blockedKeywords = [] } = await chrome.storage.local.get(
+browser.runtime.onInstalled.addListener(async () => {
+  const { blockedKeywords = [] } = await browser.storage.local.get(
     "blockedKeywords"
   );
   updateRules(blockedKeywords.map(decrypt));
 });
 
-chrome.storage.onChanged.addListener(({ blockedKeywords }) => {
+browser.storage.onChanged.addListener(({ blockedKeywords }) => {
   if (blockedKeywords) {
     updateRules(blockedKeywords.newValue.map(decrypt));
   }
 });
 
 async function updateRules(keywords = []) {
-  const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+  const existingRules = await browser.declarativeNetRequest.getDynamicRules();
   const allIds = existingRules.map((rule) => rule.id);
 
-  await chrome.declarativeNetRequest.updateDynamicRules({
+  await browser.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: allIds,
   });
 
@@ -49,6 +50,6 @@ async function updateRules(keywords = []) {
   }));
 
   if (rules.length) {
-    await chrome.declarativeNetRequest.updateDynamicRules({ addRules: rules });
+    await browser.declarativeNetRequest.updateDynamicRules({ addRules: rules });
   }
 }

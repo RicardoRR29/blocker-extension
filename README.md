@@ -1,13 +1,13 @@
 # Focus Blocker
 
-Chrome extension that blocks distracting sites and helps maintain focus.
+Browser extension that blocks distracting sites and helps maintain focus in Chrome, Opera, and other Chromium-based browsers.
 
 ## Features
 
 - Site blocking by keyword using the `declarativeNetRequest` API.
 - Settings page to add or remove blocked sites.
 - Block page with daily statistics and motivational quotes.
-- Data stored locally using `chrome.storage`.
+- Data stored locally using `browser.storage`.
 
 ## Installation
 
