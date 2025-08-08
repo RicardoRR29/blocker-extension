@@ -1,3 +1,5 @@
+const browser = window.browser || window.chrome;
+
 class BlockedPage {
   constructor() {
     this.motivationalQuotes = window.motivationalQuotes || [];
@@ -24,7 +26,7 @@ class BlockedPage {
   async updateStats() {
     try {
       const today = new Date().toDateString();
-      const result = await window.chrome.storage.local.get(["blockedStats"]);
+      const result = await browser.storage.local.get(["blockedStats"]);
       const stats = result.blockedStats || {};
 
       if (!stats[today]) {
@@ -34,7 +36,7 @@ class BlockedPage {
       stats[today].blocks += 1;
       stats[today].timeBlocked += Math.floor(Math.random() * 5) + 2;
 
-      await window.chrome.storage.local.set({ blockedStats: stats });
+      await browser.storage.local.set({ blockedStats: stats });
       this.displayStats(stats[today]);
     } catch (error) {
       console.error("Error updating statistics:", error);
@@ -83,7 +85,7 @@ function goBack() {
 
 function openSettings() {
   try {
-    window.chrome.runtime.openOptionsPage();
+    browser.runtime.openOptionsPage();
   } catch (error) {
     console.error("Could not open settings:", error);
     alert("To access the settings, click the extension icon in the toolbar.");

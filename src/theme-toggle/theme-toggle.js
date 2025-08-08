@@ -1,3 +1,5 @@
+const browser = globalThis.browser || globalThis.chrome;
+
 function xor(str) {
   let result = "";
   for (let i = 0; i < str.length; i++) {
@@ -63,19 +65,19 @@ class ThemeToggle {
 
   async getStoredTheme() {
     try {
-      const { "focus-blocker-theme": theme } = await chrome.storage.local.get(
+      const { "focus-blocker-theme": theme } = await browser.storage.local.get(
         "focus-blocker-theme"
       );
       return theme ? decrypt(theme) : null;
     } catch (error) {
-      console.warn("chrome.storage não está disponível:", error);
+      console.warn("browser.storage não está disponível:", error);
       return null;
     }
   }
 
   async setStoredTheme(theme) {
     try {
-      await chrome.storage.local.set({
+      await browser.storage.local.set({
         "focus-blocker-theme": encrypt(theme),
       });
     } catch (error) {
