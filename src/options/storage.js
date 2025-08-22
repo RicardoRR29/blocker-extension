@@ -1,4 +1,5 @@
-const browser = globalThis.browser || globalThis.chrome;
+const browser =
+  globalThis.browser || globalThis.chrome || globalThis.opera || globalThis.opr;
 
 function xor(str) {
   let result = "";
