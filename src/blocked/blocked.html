@@ -65,9 +65,7 @@
             </p>
 
             <div class="quote">
-              <p id="motivationalText">
-                "Focus is the key to turning dreams into reality."
-              </p>
+              <p id="motivationalText">John 3:16 — "For God so loved the world that He gave His one and only Son, that whoever believes in Him shall not perish but have eternal life."</p>
             </div>
 
             <div class="footer">
@@ -89,8 +87,75 @@
       </div>
     </div>
 
-    <script src="verses.js"></script>
     <script src="script.js"></script>
     <script src="../theme-toggle/theme-toggle.js"></script>
+    
+    <script>
+      // Lista de versículos bíblicos
+      const verses = [
+        'Ephesians 2:8-9 — "For by grace you have been saved through faith, and this is not from yourselves, it is the gift of God; not by works, so that no one can boast."',
+        'John 3:16 — "For God so loved the world that He gave His one and only Son, that whoever believes in Him shall not perish but have eternal life."',
+        'Romans 3:23-24 — "For all have sinned and fall short of the glory of God, and all are justified freely by His grace through the redemption that is in Christ Jesus."',
+        'Romans 6:23 — "For the wages of sin is death, but the free gift of God is eternal life in Christ Jesus our Lord."',
+        'Romans 5:8 — "But God demonstrates His own love for us in this: while we were still sinners, Christ died for us."',
+        'Acts 4:12 — "Salvation is found in no one else, for there is no other name under heaven given to mankind by which we must be saved."',
+        '2 Corinthians 5:17 — "Therefore, if anyone is in Christ, he is a new creation. The old has passed away; behold, the new has come!"',
+        'John 14:6 — "I am the way and the truth and the life. No one comes to the Father except through Me."',
+        'Romans 8:1 — "Therefore, there is now no condemnation for those who are in Christ Jesus."',
+        'Galatians 2:20 — "I have been crucified with Christ and I no longer live, but Christ lives in me."',
+        'Matthew 11:28-30 — "Come to Me, all who are weary and burdened, and I will give you rest."',
+        'Luke 19:10 — "For the Son of Man came to seek and to save the lost."',
+        'Mark 1:15 — "The time is fulfilled, and the kingdom of God is at hand; repent and believe in the gospel."',
+        'Acts 16:31 — "Believe in the Lord Jesus, and you will be saved—you and your household."',
+        '1 Peter 3:18 — "For Christ also suffered once for sins, the righteous for the unrighteous, that He might bring us to God."',
+        'John 1:12 — "Yet to all who received Him, to those who believed in His name, He gave the right to become children of God."',
+        'Revelation 3:20 — "Behold, I stand at the door and knock. If anyone hears My voice and opens the door, I will come in and dine with him, and he with Me."',
+        'Romans 1:16 — "For I am not ashamed of the gospel, because it is the power of God that brings salvation to everyone who believes."',
+        'Romans 10:13 — "For everyone who calls on the name of the Lord will be saved."',
+        '2 Corinthians 6:2 — "Behold, now is the favorable time; behold, now is the day of salvation."',
+        'Psalm 51:10 — "Create in me a clean heart, O God, and renew a steadfast spirit within me."',
+        'Isaiah 55:6-7 — "Seek the Lord while He may be found; call on Him while He is near."',
+        'Jeremiah 29:13 — "You will seek Me and find Me when you seek Me with all your heart."',
+        'Psalm 34:8 — "Taste and see that the Lord is good; blessed is the one who takes refuge in Him."',
+        'Proverbs 3:5-6 — "Trust in the Lord with all your heart and lean not on your own understanding."',
+        'Isaiah 1:18 — "Come now, let us settle the matter, says the Lord. Though your sins are like scarlet, they shall be as white as snow."',
+        'Matthew 4:17 — "Repent, for the kingdom of heaven is near."',
+        'Matthew 5:16 — "Let your light shine before others, so that they may see your good works and give glory to your Father in heaven."',
+        'Matthew 6:33 — "But seek first His kingdom and His righteousness."',
+        'Matthew 7:7-8 — "Ask, and it will be given to you; seek, and you will find; knock, and it will be opened to you."',
+        'Luke 23:43 — "Truly I tell you, today you will be with Me in paradise."',
+        'Acts 2:21 — "And everyone who calls on the name of the Lord will be saved."',
+        'Acts 2:38 — "Repent and be baptized, every one of you, in the name of Jesus Christ for the forgiveness of your sins."',
+        '1 Corinthians 15:3-4 — "Christ died for our sins according to the Scriptures, was buried and was raised on the third day."',
+        'Galatians 3:26 — "So in Christ Jesus you are all children of God through faith."',
+        'Ephesians 1:7 — "In Him we have redemption through His blood, the forgiveness of sins, in accordance with the riches of His grace."',
+        'Philippians 3:8-9 — "That I may gain Christ and be found in Him, not having a righteousness of my own that comes from the law, but that which is through faith in Christ."',
+        'Colossians 2:13-14 — "God made you alive with Christ. He forgave us all our sins, having canceled the charge of our legal indebtedness."',
+        '1 Thessalonians 5:9-10 — "For God did not appoint us to suffer wrath but to receive salvation through our Lord Jesus Christ."',
+        'Titus 2:11 — "For the grace of God has appeared that offers salvation to all people."',
+        'Hebrews 4:16 — "Let us then approach God\'s throne of grace with confidence, so that we may receive mercy."',
+        'Hebrews 10:10 — "By that will, we have been made holy through the sacrifice of the body of Jesus Christ once for all."',
+        'Hebrews 12:2 — "Fixing our eyes on Jesus, the author and perfecter of faith."',
+        '1 Peter 1:18-19 — "You were redeemed with the precious blood of Christ, a lamb without blemish or defect."',
+        '1 Peter 2:24 — "He Himself bore our sins in His body on the cross."',
+        '1 John 1:9 — "If we confess our sins, He is faithful and just and will forgive us our sins and purify us from all unrighteousness."',
+        '1 John 2:1-2 — "We have an Advocate with the Father—Jesus Christ, the Righteous One. He is the atoning sacrifice for our sins."',
+        'Revelation 1:5 — "To Him who loves us and has freed us from our sins by His blood."',
+        'Revelation 21:6 — "I am the Alpha and the Omega. To the thirsty I will give water without cost from the spring of the water of life."'
+      ];
+      
+      // Função para mostrar versículo aleatório
+      function showRandomVerse() {
+        const quoteElement = document.getElementById("motivationalText");
+        if (quoteElement) {
+          const randomIndex = Math.floor(Math.random() * verses.length);
+          const randomVerse = verses[randomIndex];
+          quoteElement.textContent = randomVerse;
+        }
+      }
+      
+      // Executar imediatamente
+      showRandomVerse();
+    </script>
   </body>
 </html>

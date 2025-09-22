@@ -1,3 +1,4 @@
+const SECRET_KEY = "focus-blocker-key";
 const browser = globalThis.browser || globalThis.chrome;
 
 function xor(str) {

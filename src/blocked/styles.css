@@ -147,6 +147,29 @@ body {
   line-height: 1.6;
 }
 
+/* Verse-specific styling */
+.verse-reference {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.verse-text {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-weight: 400;
+  text-align: left;
+  padding-left: 1rem;
+  border-left: 3px solid var(--primary);
+  margin-left: 0.5rem;
+}
+
 /* Actions */
 .actions {
   margin-bottom: 2rem;
@@ -265,6 +288,17 @@ body {
   .quote p {
     font-size: 0.9375rem;
   }
+
+  .verse-reference {
+    font-size: 0.8125rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .verse-text {
+    font-size: 0.9375rem;
+    padding-left: 0.75rem;
+    margin-left: 0.25rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -303,6 +337,18 @@ body {
 
   .quote p {
     font-size: 0.875rem;
+  }
+
+  .verse-reference {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .verse-text {
+    font-size: 0.875rem;
+    padding-left: 0.5rem;
+    margin-left: 0.25rem;
+    border-left-width: 2px;
   }
 }
 

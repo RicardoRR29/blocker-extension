@@ -60,43 +60,89 @@
       </div>
 
       <div class="main-section">
-        <form class="add-form" id="addForm">
-          <div class="input-group">
-            <input
-              type="text"
-              id="urlInput"
-              placeholder="Enter a site to block (e.g., youtube.com)"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <button type="submit" class="add-btn" id="addBtn">Add</button>
-          </div>
-          <button type="button" class="add-btn block-current-btn" id="blockCurrent">
-            Block this site
-          </button>
-        </form>
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav">
+          <button class="tab-btn active" id="individualTab">Sites Individuais</button>
+          <button class="tab-btn" id="groupsTab">Grupos de Sites</button>
+        </div>
 
-        <div class="blocked-section">
-          <div class="section-title">
-            <span class="count" id="blockedCount">0</span> blocked sites
+        <!-- Individual Sites Tab -->
+        <div class="tab-content active" id="individualContent">
+          <form class="add-form" id="addForm">
+            <div class="input-group">
+              <input
+                type="text"
+                id="urlInput"
+                placeholder="Digite um site para bloquear (ex: youtube.com)"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button type="submit" class="add-btn" id="addBtn">Adicionar</button>
+            </div>
+            <button type="button" class="add-btn block-current-btn" id="blockCurrent">
+              Bloquear este site
+            </button>
+          </form>
+
+          <div class="blocked-section">
+            <div class="section-title">
+              <span class="count" id="blockedCount">0</span> sites bloqueados
+            </div>
+            <div class="empty-state" id="emptyState">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v8" />
+                <path d="M8 12h8" />
+              </svg>
+              <p>Nenhum site bloqueado ainda</p>
+            </div>
+            <div class="blocked-list" id="blockedList">
+              <!-- Blocked sites will be inserted here -->
+            </div>
           </div>
-          <div class="empty-state" id="emptyState">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v8" />
-              <path d="M8 12h8" />
-            </svg>
-            <p>No blocked sites yet</p>
+        </div>
+
+        <!-- Groups Tab -->
+        <div class="tab-content" id="groupsContent">
+          <div class="groups-header">
+            <button class="add-btn" id="createGroupBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v8"/>
+                <path d="M8 12h8"/>
+              </svg>
+              Criar Grupo
+            </button>
           </div>
-          <div class="blocked-list" id="blockedList">
-            <!-- Blocked sites will be inserted here -->
+
+          <div class="groups-section">
+            <div class="section-title">
+              <span class="count" id="groupsCount">0</span> grupos criados
+            </div>
+            <div class="empty-state" id="groupsEmptyState">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <path d="M9 9h6v6H9z"/>
+              </svg>
+              <p>Nenhum grupo criado ainda</p>
+            </div>
+            <div class="groups-list" id="groupsList">
+              <!-- Groups will be inserted here -->
+            </div>
           </div>
         </div>
       </div>
@@ -104,6 +150,44 @@
 
     <!-- Toast notifications -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Group Modal -->
+    <div class="modal" id="groupModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">Criar Novo Grupo</h3>
+          <button class="modal-close" id="modalClose">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18"/>
+              <path d="M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="groupNameInput">Nome do Grupo</label>
+            <input
+              type="text"
+              id="groupNameInput"
+              placeholder="Ex: Redes Sociais"
+              maxlength="50"
+            />
+          </div>
+          <div class="form-group">
+            <label for="groupUrlsInput">URLs (uma por linha)</label>
+            <textarea
+              id="groupUrlsInput"
+              placeholder="youtube.com&#10;facebook.com&#10;twitter.com"
+              rows="6"
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="modalCancel">Cancelar</button>
+          <button class="btn-primary" id="modalSave">Salvar</button>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="options.js"></script>
     <script src="../theme-toggle/theme-toggle.js"></script>
