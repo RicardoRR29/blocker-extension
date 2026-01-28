@@ -1,4 +1,163 @@
 const browser = window.browser || window.chrome;
+const STATS_KEY = "blockedStats";
+const STATS_VERSION = 2;
+
+function getDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeStats(rawStats) {
+  const baseStats = {
+    version: STATS_VERSION,
+    totalBlocks: 0,
+    bySite: {},
+    byDate: {},
+    lastBlockedAt: null,
+  };
+
+  if (!rawStats || typeof rawStats !== "object") {
+    return baseStats;
+  }
+
+  if (rawStats.version === STATS_VERSION) {
+    return {
+      ...baseStats,
+      ...rawStats,
+      bySite:
+        rawStats.bySite && typeof rawStats.bySite === "object"
+          ? rawStats.bySite
+          : {},
+      byDate:
+        rawStats.byDate && typeof rawStats.byDate === "object"
+          ? rawStats.byDate
+          : {},
+    };
+  }
+
+  const migrated = { ...baseStats };
+  Object.entries(rawStats).forEach(([dateKey, value]) => {
+    if (!value || typeof value !== "object") return;
+    const blocks = Number(value.blocks) || 0;
+    if (!blocks) return;
+
+    const parsedDate = new Date(dateKey);
+    if (Number.isNaN(parsedDate.getTime())) return;
+
+    const normalizedKey = getDateKey(parsedDate);
+    if (!migrated.byDate[normalizedKey]) {
+      migrated.byDate[normalizedKey] = { total: 0, sites: {} };
+    }
+    migrated.byDate[normalizedKey].total += blocks;
+    migrated.totalBlocks += blocks;
+  });
+
+  return migrated;
+}
+
+function loadStatsFromLocalStorage() {
+  if (typeof localStorage === "undefined") {
+    return normalizeStats(null);
+  }
+
+  try {
+    const raw = localStorage.getItem(STATS_KEY);
+    if (!raw) {
+      return normalizeStats(null);
+    }
+    return normalizeStats(JSON.parse(raw));
+  } catch (error) {
+    console.warn("Error reading stats from localStorage:", error);
+    return normalizeStats(null);
+  }
+}
+
+function saveStatsToLocalStorage(stats) {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+
+  try {
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  } catch (error) {
+    console.warn("Error saving stats to localStorage:", error);
+  }
+}
+
+function getTopSite(bySite) {
+  if (!bySite || typeof bySite !== "object") {
+    return null;
+  }
+
+  const entries = Object.entries(bySite)
+    .map(([site, data]) => ({
+      site,
+      total: data && typeof data === "object" ? Number(data.total) || 0 : 0,
+    }))
+    .filter((entry) => entry.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  return entries.length ? entries[0] : null;
+}
+
+function getBlockedSite() {
+  const params = new URLSearchParams(window.location.search);
+  const blockedParam = params.get("blocked");
+  if (blockedParam) {
+    return blockedParam.trim().toLowerCase();
+  }
+
+  if (document.referrer) {
+    try {
+      return new URL(document.referrer).hostname.toLowerCase();
+    } catch (error) {
+      console.warn("Unable to parse referrer URL:", error);
+    }
+  }
+
+  return null;
+}
+
+async function recordBlock() {
+  const blockedSite = getBlockedSite();
+  const now = new Date();
+  const dateKey = getDateKey(now);
+
+  const stats = loadStatsFromLocalStorage();
+
+  stats.totalBlocks += 1;
+  stats.lastBlockedAt = now.toISOString();
+
+  if (!stats.byDate[dateKey]) {
+    stats.byDate[dateKey] = { total: 0, sites: {} };
+  }
+  stats.byDate[dateKey].total += 1;
+
+  if (blockedSite) {
+    if (
+      !stats.byDate[dateKey].sites ||
+      typeof stats.byDate[dateKey].sites !== "object"
+    ) {
+      stats.byDate[dateKey].sites = {};
+    }
+    stats.byDate[dateKey].sites[blockedSite] =
+      (stats.byDate[dateKey].sites[blockedSite] || 0) + 1;
+
+    if (!stats.bySite || typeof stats.bySite !== "object") {
+      stats.bySite = {};
+    }
+    if (!stats.bySite[blockedSite]) {
+      stats.bySite[blockedSite] = { total: 0, lastBlockedAt: null };
+    }
+    stats.bySite[blockedSite].total += 1;
+    stats.bySite[blockedSite].lastBlockedAt = now.toISOString();
+  }
+
+  saveStatsToLocalStorage(stats);
+  return stats;
+}
 
 // Lista de versículos bíblicos
 const motivationalQuotes = [
@@ -142,7 +301,6 @@ class BlockedPage {
   init() {
     this.displayRandomQuote();
     this.updateStats();
-    this.startStatsAnimation();
   }
 
   displayRandomQuote() {
@@ -151,32 +309,54 @@ class BlockedPage {
 
   async updateStats() {
     try {
-      const today = new Date().toDateString();
-      const result = await browser.storage.local.get(["blockedStats"]);
-      const stats = result.blockedStats || {};
+      const stats = await recordBlock();
+      const todayKey = getDateKey(new Date());
+      const todayStats = stats.byDate[todayKey] || { total: 0 };
+      const topSite = getTopSite(stats.bySite);
 
-      if (!stats[today]) {
-        stats[today] = { blocks: 0, timeBlocked: 0 };
-      }
-
-      stats[today].blocks += 1;
-      stats[today].timeBlocked += Math.floor(Math.random() * 5) + 2;
-
-      await browser.storage.local.set({ blockedStats: stats });
-      this.displayStats(stats[today]);
+      this.displayStats({
+        blocksToday: todayStats.total || 0,
+        totalBlocks: stats.totalBlocks || 0,
+        topSite: topSite ? topSite.site : null,
+        topSiteCount: topSite ? topSite.total : 0,
+      });
     } catch (error) {
       console.error("Error updating statistics:", error);
-      this.displayStats({ blocks: 1, timeBlocked: 5 });
+      this.displayStats({
+        blocksToday: 1,
+        totalBlocks: 1,
+        topSite: null,
+        topSiteCount: 0,
+      });
     }
+    this.startStatsAnimation();
   }
 
   displayStats(stats) {
     const timeBlockedElement = document.getElementById("timeBlocked");
     const blocksTodayElement = document.getElementById("blocksToday");
+    const topSiteElement = document.getElementById("topBlockedSite");
+    const topCountElement = document.getElementById("topBlockedCount");
 
-    if (timeBlockedElement && blocksTodayElement) {
-      timeBlockedElement.textContent = stats.timeBlocked;
-      blocksTodayElement.textContent = stats.blocks;
+    if (timeBlockedElement) {
+      timeBlockedElement.textContent = stats.totalBlocks;
+    }
+
+    if (blocksTodayElement) {
+      blocksTodayElement.textContent = stats.blocksToday;
+    }
+
+    if (topSiteElement) {
+      const topSiteText = stats.topSite ? stats.topSite : "Sem dados";
+      topSiteElement.textContent = topSiteText;
+      topSiteElement.title = stats.topSite ? stats.topSite : "";
+    }
+
+    if (topCountElement) {
+      const topCount = Number(stats.topSiteCount) || 0;
+      topCountElement.textContent = stats.topSite
+        ? `Mais bloqueado (${topCount}x)`
+        : "Mais bloqueado";
     }
   }
 
@@ -184,7 +364,10 @@ class BlockedPage {
     const statNumbers = document.querySelectorAll(".stat-number");
 
     statNumbers.forEach((element) => {
-      const finalValue = Number.parseInt(element.textContent);
+      const finalValue = Number.parseInt(element.textContent, 10);
+      if (Number.isNaN(finalValue)) {
+        return;
+      }
       let currentValue = 0;
       const increment = Math.ceil(finalValue / 15);
 

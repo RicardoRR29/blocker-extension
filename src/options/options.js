@@ -11,6 +11,137 @@ import {
 import { showToast } from "./toast.js";
 import { normalizeUrl } from "./utils.js";
 const browser = globalThis.browser || globalThis.chrome;
+const STATS_KEY = "blockedStats";
+const STATS_VERSION = 2;
+const STATS_DAYS = 7;
+const TOP_SITES_LIMIT = 5;
+
+function getDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getRecentDays(count) {
+  const days = [];
+  const today = new Date();
+  for (let i = count - 1; i >= 0; i -= 1) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    days.push(date);
+  }
+  return days;
+}
+
+function formatShortDate(date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}/${month}`;
+}
+
+function formatDateTime(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  const dateText = date.toLocaleDateString("pt-BR");
+  const timeText = date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${dateText} ${timeText}`;
+}
+
+function normalizeStats(rawStats) {
+  const baseStats = {
+    version: STATS_VERSION,
+    totalBlocks: 0,
+    bySite: {},
+    byDate: {},
+    lastBlockedAt: null,
+  };
+
+  if (!rawStats || typeof rawStats !== "object") {
+    return baseStats;
+  }
+
+  if (rawStats.version === STATS_VERSION) {
+    return {
+      ...baseStats,
+      ...rawStats,
+      bySite:
+        rawStats.bySite && typeof rawStats.bySite === "object"
+          ? rawStats.bySite
+          : {},
+      byDate:
+        rawStats.byDate && typeof rawStats.byDate === "object"
+          ? rawStats.byDate
+          : {},
+    };
+  }
+
+  const migrated = { ...baseStats };
+  Object.entries(rawStats).forEach(([dateKey, value]) => {
+    if (!value || typeof value !== "object") return;
+    const blocks = Number(value.blocks) || 0;
+    if (!blocks) return;
+
+    const parsedDate = new Date(dateKey);
+    if (Number.isNaN(parsedDate.getTime())) return;
+
+    const normalizedKey = getDateKey(parsedDate);
+    if (!migrated.byDate[normalizedKey]) {
+      migrated.byDate[normalizedKey] = { total: 0, sites: {} };
+    }
+    migrated.byDate[normalizedKey].total += blocks;
+    migrated.totalBlocks += blocks;
+  });
+
+  return migrated;
+}
+
+function loadStatsFromLocalStorage() {
+  if (typeof localStorage === "undefined") {
+    return normalizeStats(null);
+  }
+
+  try {
+    const raw = localStorage.getItem(STATS_KEY);
+    if (!raw) {
+      return normalizeStats(null);
+    }
+    return normalizeStats(JSON.parse(raw));
+  } catch (error) {
+    console.warn("Error reading stats from localStorage:", error);
+    return normalizeStats(null);
+  }
+}
+
+function getTopSites(bySite, limit) {
+  return Object.entries(bySite || {})
+    .map(([site, data]) => ({
+      site,
+      total: Number(data.total) || 0,
+    }))
+    .filter((entry) => entry.total > 0)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, limit);
+}
+
+function formatSiteLabel(site) {
+  if (!site || site === "unknown") {
+    return "Desconhecido";
+  }
+  return site;
+}
+
+function sumRecentDays(byDate, count) {
+  return getRecentDays(count).reduce((total, date) => {
+    const key = getDateKey(date);
+    const dayTotal = byDate && byDate[key] ? Number(byDate[key].total) || 0 : 0;
+    return total + dayTotal;
+  }, 0);
+}
 
 class FocusBlockerOptions {
   constructor() {
@@ -44,6 +175,21 @@ class FocusBlockerOptions {
     this.groupNameInput = document.getElementById("groupNameInput");
     this.groupUrlsInput = document.getElementById("groupUrlsInput");
     
+    // Stats elements
+    this.statsTab = document.getElementById("statsTab");
+    this.statsContent = document.getElementById("statsContent");
+    this.statsSummary = document.getElementById("statsSummary");
+    this.statsCharts = document.getElementById("statsCharts");
+    this.statsEmptyState = document.getElementById("statsEmptyState");
+    this.statsTotal = document.getElementById("statsTotal");
+    this.statsToday = document.getElementById("statsToday");
+    this.statsLast7 = document.getElementById("statsLast7");
+    this.statsTopSite = document.getElementById("statsTopSite");
+    this.statsTopCount = document.getElementById("statsTopCount");
+    this.statsUpdated = document.getElementById("statsUpdated");
+    this.dailyChart = document.getElementById("dailyChart");
+    this.topSitesChart = document.getElementById("topSitesChart");
+
     this.toastContainer = document.getElementById("toastContainer");
 
     this.blockedKeywords = [];
@@ -56,6 +202,7 @@ class FocusBlockerOptions {
   init() {
     this.loadBlockedUrls();
     this.loadLinkGroups();
+    this.loadStats();
     this.bindEvents();
   }
 
@@ -93,6 +240,12 @@ class FocusBlockerOptions {
     this.groupsTab.addEventListener("click", () => {
       this.switchTab("groups");
     });
+
+    if (this.statsTab) {
+      this.statsTab.addEventListener("click", () => {
+        this.switchTab("stats");
+      });
+    }
 
     // Groups events
     this.createGroupBtn.addEventListener("click", () => {
@@ -286,13 +439,33 @@ class FocusBlockerOptions {
     if (tab === "individual") {
       this.individualTab.classList.add("active");
       this.groupsTab.classList.remove("active");
+      if (this.statsTab) {
+        this.statsTab.classList.remove("active");
+      }
       this.individualContent.classList.add("active");
       this.groupsContent.classList.remove("active");
+      if (this.statsContent) {
+        this.statsContent.classList.remove("active");
+      }
     } else if (tab === "groups") {
       this.individualTab.classList.remove("active");
       this.groupsTab.classList.add("active");
+      if (this.statsTab) {
+        this.statsTab.classList.remove("active");
+      }
       this.individualContent.classList.remove("active");
       this.groupsContent.classList.add("active");
+      if (this.statsContent) {
+        this.statsContent.classList.remove("active");
+      }
+    } else if (tab === "stats" && this.statsTab && this.statsContent) {
+      this.individualTab.classList.remove("active");
+      this.groupsTab.classList.remove("active");
+      this.statsTab.classList.add("active");
+      this.individualContent.classList.remove("active");
+      this.groupsContent.classList.remove("active");
+      this.statsContent.classList.add("active");
+      this.loadStats();
     }
   }
 
@@ -518,6 +691,145 @@ class FocusBlockerOptions {
       this.groupsEmptyState.style.display = "none";
       this.groupsList.style.display = "block";
     }
+  }
+
+  async loadStats() {
+    if (!this.statsContent) return;
+
+    try {
+      const stats = loadStatsFromLocalStorage();
+      this.renderStats(stats);
+    } catch (error) {
+      console.error("Error loading stats:", error);
+    }
+  }
+
+  renderStats(stats) {
+    const totalBlocks = Number(stats.totalBlocks) || 0;
+    const todayKey = getDateKey(new Date());
+    const todayBlocks = stats.byDate?.[todayKey]?.total || 0;
+    const last7Blocks = sumRecentDays(stats.byDate, STATS_DAYS);
+    const topSites = getTopSites(stats.bySite, TOP_SITES_LIMIT);
+    const topSite = topSites[0];
+
+    if (this.statsTotal) {
+      this.statsTotal.textContent = totalBlocks;
+    }
+    if (this.statsToday) {
+      this.statsToday.textContent = todayBlocks;
+    }
+    if (this.statsLast7) {
+      this.statsLast7.textContent = last7Blocks;
+    }
+    if (this.statsTopSite) {
+      this.statsTopSite.textContent = topSite
+        ? formatSiteLabel(topSite.site)
+        : "-";
+      this.statsTopSite.title = topSite ? topSite.site : "";
+    }
+    if (this.statsTopCount) {
+      this.statsTopCount.textContent = topSite
+        ? `${topSite.total} bloqueios`
+        : "";
+    }
+    if (this.statsUpdated) {
+      this.statsUpdated.textContent = stats.lastBlockedAt
+        ? `Atualizado: ${formatDateTime(stats.lastBlockedAt)}`
+        : "Sem registros";
+    }
+
+    const hasData = totalBlocks > 0;
+    if (this.statsSummary) {
+      this.statsSummary.style.display = hasData ? "grid" : "none";
+    }
+    if (this.statsCharts) {
+      this.statsCharts.style.display = hasData ? "grid" : "none";
+    }
+    if (this.statsEmptyState) {
+      this.statsEmptyState.style.display = hasData ? "none" : "block";
+    }
+
+    this.renderDailyChart(stats);
+    this.renderTopSitesChart(topSites);
+  }
+
+  renderDailyChart(stats) {
+    if (!this.dailyChart) return;
+
+    const days = getRecentDays(STATS_DAYS);
+    const values = days.map((date) => {
+      const key = getDateKey(date);
+      return stats.byDate?.[key]?.total || 0;
+    });
+    const maxValue = Math.max(1, ...values);
+
+    this.dailyChart.innerHTML = "";
+
+    days.forEach((date, index) => {
+      const value = values[index];
+      const bar = document.createElement("div");
+      bar.className = "chart-bar";
+
+      const valueEl = document.createElement("div");
+      valueEl.className = "chart-bar-value";
+      valueEl.textContent = value;
+
+      const track = document.createElement("div");
+      track.className = "chart-bar-track";
+
+      const fill = document.createElement("div");
+      fill.className = "chart-bar-fill";
+      fill.style.height = `${Math.round((value / maxValue) * 100)}%`;
+      track.appendChild(fill);
+
+      const label = document.createElement("div");
+      label.className = "chart-bar-label";
+      label.textContent = formatShortDate(date);
+
+      bar.append(valueEl, track, label);
+      this.dailyChart.appendChild(bar);
+    });
+  }
+
+  renderTopSitesChart(topSites) {
+    if (!this.topSitesChart) return;
+
+    this.topSitesChart.innerHTML = "";
+
+    if (!topSites.length) {
+      const empty = document.createElement("div");
+      empty.className = "chart-empty";
+      empty.textContent = "Sem dados ainda";
+      this.topSitesChart.appendChild(empty);
+      return;
+    }
+
+    const maxValue = Math.max(...topSites.map((site) => site.total));
+
+    topSites.forEach((entry) => {
+      const item = document.createElement("div");
+      item.className = "rank-item";
+
+      const label = document.createElement("div");
+      label.className = "rank-label";
+      label.textContent = formatSiteLabel(entry.site);
+      label.title = entry.site;
+
+      const bar = document.createElement("div");
+      bar.className = "rank-bar";
+
+      const fill = document.createElement("div");
+      fill.className = "rank-bar-fill";
+      fill.style.width = `${Math.round((entry.total / maxValue) * 100)}%`;
+      bar.appendChild(fill);
+
+      const value = document.createElement("div");
+      value.className = "rank-value";
+      value.textContent = entry.total;
+
+      item.append(label, bar, value);
+      this.topSitesChart.appendChild(item);
+    });
   }
 }
 

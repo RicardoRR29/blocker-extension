@@ -37,20 +37,45 @@ async function updateRules(keywords = []) {
     removeRuleIds: allIds,
   });
 
-  const rules = keywords.map((keyword, index) => ({
-    id: index + 1,
-    priority: 1,
-    action: {
-      type: "redirect",
-      redirect: { extensionPath: "/src/blocked/blocked.html" },
-    },
-    condition: {
-      urlFilter: keyword,
-      resourceTypes: ["main_frame"],
-    },
-  }));
+  const buildRule = (keyword, index, withParam) => {
+    const redirectPath = withParam
+      ? `/src/blocked/blocked.html?blocked=${encodeURIComponent(keyword)}`
+      : "/src/blocked/blocked.html";
+
+    return {
+      id: index + 1,
+      priority: 1,
+      action: {
+        type: "redirect",
+        redirect: { extensionPath: redirectPath },
+      },
+      condition: {
+        urlFilter: keyword,
+        resourceTypes: ["main_frame"],
+      },
+    };
+  };
+
+  const rules = keywords.map((keyword, index) =>
+    buildRule(keyword, index, true)
+  );
 
   if (rules.length) {
-    await browser.declarativeNetRequest.updateDynamicRules({ addRules: rules });
+    try {
+      await browser.declarativeNetRequest.updateDynamicRules({
+        addRules: rules,
+      });
+    } catch (error) {
+      console.warn(
+        "Failed to add rules with query params. Retrying without them.",
+        error
+      );
+      const fallbackRules = keywords.map((keyword, index) =>
+        buildRule(keyword, index, false)
+      );
+      await browser.declarativeNetRequest.updateDynamicRules({
+        addRules: fallbackRules,
+      });
+    }
   }
 }

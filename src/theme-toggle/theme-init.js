@@ -1,21 +1,21 @@
-const SECRET_KEY = "focus-blocker-key";
-const browser = globalThis.browser || globalThis.chrome;
+(() => {
+  const SECRET_KEY = "focus-blocker-key";
+  const browser = globalThis.browser || globalThis.chrome;
 
-function xor(str) {
-  let result = "";
-  for (let i = 0; i < str.length; i++) {
-    result += String.fromCharCode(
-      str.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length)
-    );
+  function xor(str) {
+    let result = "";
+    for (let i = 0; i < str.length; i++) {
+      result += String.fromCharCode(
+        str.charCodeAt(i) ^ SECRET_KEY.charCodeAt(i % SECRET_KEY.length)
+      );
+    }
+    return result;
   }
-  return result;
-}
 
-function decrypt(text) {
-  return xor(atob(text));
-}
+  function decrypt(text) {
+    return xor(atob(text));
+  }
 
-(function () {
   try {
     browser.storage.local.get("focus-blocker-theme", (data) => {
       let storedTheme = data["focus-blocker-theme"];

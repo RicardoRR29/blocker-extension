@@ -1,3 +1,4 @@
+(() => {
 const SECRET_KEY = "focus-blocker-key";
 const browser = globalThis.browser || globalThis.chrome;
 
@@ -178,3 +179,4 @@ window.setFocusBlockerTheme = (theme) => {
     window.focusBlockerTheme.setTheme(theme);
   }
 };
+})();
