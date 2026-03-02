@@ -1,6 +1,20 @@
 const browser = window.browser || window.chrome;
 const STATS_KEY = "blockedStats";
 const STATS_VERSION = 2;
+const TASKS_KEY = "blockedTasks";
+const MAX_TASKS = 100;
+const DEFAULT_TAG_COLOR = "#2563eb";
+const TAG_COLOR_OPTIONS = [
+  "#2563eb",
+  "#0891b2",
+  "#059669",
+  "#65a30d",
+  "#ca8a04",
+  "#ea580c",
+  "#dc2626",
+  "#db2777",
+  "#7c3aed",
+];
 
 function getDateKey(date = new Date()) {
   const year = date.getFullYear();
@@ -83,6 +97,120 @@ function saveStatsToLocalStorage(stats) {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats));
   } catch (error) {
     console.warn("Error saving stats to localStorage:", error);
+  }
+}
+
+function normalizeTagName(rawName) {
+  return typeof rawName === "string" ? rawName.trim().slice(0, 30) : "";
+}
+
+function normalizeTagColor(rawColor) {
+  if (typeof rawColor !== "string") {
+    return DEFAULT_TAG_COLOR;
+  }
+  const value = rawColor.trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(value) ? value : DEFAULT_TAG_COLOR;
+}
+
+function buildTagId(name, color) {
+  return `${name.toLowerCase()}::${color.toLowerCase()}`;
+}
+
+function normalizeTaskTags(rawTags) {
+  if (!Array.isArray(rawTags)) {
+    return [];
+  }
+
+  const uniqueTags = new Map();
+
+  rawTags.forEach((rawTag) => {
+    if (!rawTag || typeof rawTag !== "object") {
+      return;
+    }
+
+    const name = normalizeTagName(rawTag.name);
+    if (!name) {
+      return;
+    }
+    const color = normalizeTagColor(rawTag.color);
+    const id =
+      typeof rawTag.id === "string" && rawTag.id
+        ? rawTag.id
+        : buildTagId(name, color);
+
+    if (!uniqueTags.has(id)) {
+      uniqueTags.set(id, { id, name, color });
+    }
+  });
+
+  return Array.from(uniqueTags.values()).slice(0, 15);
+}
+
+function normalizeTasks(rawTasks) {
+  if (!Array.isArray(rawTasks)) {
+    return [];
+  }
+
+  return rawTasks
+    .map((task) => {
+      if (!task || typeof task !== "object") {
+        return null;
+      }
+
+      const name =
+        typeof task.name === "string" ? task.name.trim().slice(0, 100) : "";
+      const description =
+        typeof task.description === "string"
+          ? task.description.trim().slice(0, 300)
+          : "";
+      const link =
+        typeof task.link === "string" ? task.link.trim().slice(0, 500) : "";
+      const id =
+        typeof task.id === "string" && task.id
+          ? task.id
+          : `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+      const createdAt =
+        typeof task.createdAt === "string"
+          ? task.createdAt
+          : new Date().toISOString();
+      const tags = normalizeTaskTags(task.tags);
+
+      if (!name || !description) {
+        return null;
+      }
+
+      return { id, name, description, link, createdAt, tags };
+    })
+    .filter(Boolean)
+    .slice(0, MAX_TASKS);
+}
+
+function loadTasksFromLocalStorage() {
+  if (typeof localStorage === "undefined") {
+    return [];
+  }
+
+  try {
+    const raw = localStorage.getItem(TASKS_KEY);
+    if (!raw) {
+      return [];
+    }
+    return normalizeTasks(JSON.parse(raw));
+  } catch (error) {
+    console.warn("Error reading tasks from localStorage:", error);
+    return [];
+  }
+}
+
+function saveTasksToLocalStorage(tasks) {
+  if (typeof localStorage === "undefined") {
+    return;
+  }
+
+  try {
+    localStorage.setItem(TASKS_KEY, JSON.stringify(normalizeTasks(tasks)));
+  } catch (error) {
+    console.warn("Error saving tasks to localStorage:", error);
   }
 }
 
@@ -295,11 +423,18 @@ function showRandomVerse() {
 class BlockedPage {
   constructor() {
     this.motivationalQuotes = motivationalQuotes || [];
+    this.tasks = loadTasksFromLocalStorage();
+    this.taskElements = {};
+    this.draftTags = [];
+    this.editingTaskId = null;
+    this.activeTagFilterId = "all";
+    this.nextTagColorIndex = 0;
     this.init();
   }
 
   init() {
     this.displayRandomQuote();
+    this.initializeTaskList();
     this.updateStats();
   }
 
@@ -380,6 +515,599 @@ class BlockedPage {
         element.textContent = currentValue;
       }, 60);
     });
+  }
+
+  initializeTaskList() {
+    const form = document.getElementById("taskForm");
+    const list = document.getElementById("taskList");
+    const error = document.getElementById("taskFormError");
+    const openModalButton = document.getElementById("openTaskModalBtn");
+    const modalBackdrop = document.getElementById("taskModalBackdrop");
+    const closeModalButton = document.getElementById("closeTaskModalBtn");
+    const cancelModalButton = document.getElementById("cancelTaskModalBtn");
+    const nameInput = document.getElementById("taskName");
+    const descriptionInput = document.getElementById("taskDescription");
+    const linkInput = document.getElementById("taskLink");
+    const tagNameInput = document.getElementById("taskTagName");
+    const tagColorInput = document.getElementById("taskTagColor");
+    const addTagButton = document.getElementById("addTaskTagBtn");
+    const selectedTagsContainer = document.getElementById("taskSelectedTags");
+    const tagFiltersContainer = document.getElementById("taskTagFilters");
+    const modalTitle = document.getElementById("taskModalTitle");
+    const saveTaskButton = document.getElementById("taskSaveBtn");
+
+    if (
+      !form ||
+      !list ||
+      !error ||
+      !openModalButton ||
+      !modalBackdrop ||
+      !closeModalButton ||
+      !cancelModalButton ||
+      !nameInput ||
+      !descriptionInput ||
+      !linkInput ||
+      !tagNameInput ||
+      !tagColorInput ||
+      !addTagButton ||
+      !selectedTagsContainer ||
+      !tagFiltersContainer ||
+      !modalTitle ||
+      !saveTaskButton
+    ) {
+      return;
+    }
+
+    this.taskElements = {
+      form,
+      list,
+      error,
+      openModalButton,
+      modalBackdrop,
+      closeModalButton,
+      cancelModalButton,
+      nameInput,
+      descriptionInput,
+      linkInput,
+      tagNameInput,
+      tagColorInput,
+      addTagButton,
+      selectedTagsContainer,
+      tagFiltersContainer,
+      modalTitle,
+      saveTaskButton,
+    };
+
+    form.addEventListener("submit", (event) => this.handleTaskSubmit(event));
+    openModalButton.addEventListener("click", () => this.openTaskModal());
+    closeModalButton.addEventListener("click", () => this.closeTaskModal());
+    cancelModalButton.addEventListener("click", () => this.closeTaskModal());
+    addTagButton.addEventListener("click", () => this.handleAddTagFromForm());
+    tagNameInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") {
+        return;
+      }
+      event.preventDefault();
+      this.handleAddTagFromForm();
+    });
+    modalBackdrop.addEventListener("click", (event) => {
+      if (event.target === modalBackdrop) {
+        this.closeTaskModal();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.isTaskModalOpen()) {
+        this.closeTaskModal();
+      }
+    });
+
+    this.taskElements.tagColorInput.value =
+      TAG_COLOR_OPTIONS[this.nextTagColorIndex % TAG_COLOR_OPTIONS.length];
+
+    this.setModalMode("create");
+    this.renderDraftTags();
+    this.renderTasks();
+  }
+
+  setTaskFormError(message = "") {
+    if (!this.taskElements.error) {
+      return;
+    }
+    this.taskElements.error.textContent = message;
+  }
+
+  isTaskModalOpen() {
+    return this.taskElements.modalBackdrop?.classList.contains("is-visible");
+  }
+
+  setModalMode(mode = "create") {
+    const { modalTitle, saveTaskButton } = this.taskElements;
+    const isEdit = mode === "edit";
+
+    if (modalTitle) {
+      modalTitle.textContent = isEdit ? "Editar task" : "Nova task";
+    }
+    if (saveTaskButton) {
+      saveTaskButton.textContent = isEdit ? "Salvar alteracoes" : "Salvar task";
+    }
+  }
+
+  openTaskModal(taskId = null) {
+    const {
+      form,
+      modalBackdrop,
+      nameInput,
+      descriptionInput,
+      linkInput,
+      tagColorInput,
+    } = this.taskElements;
+    if (
+      !form ||
+      !modalBackdrop ||
+      !nameInput ||
+      !descriptionInput ||
+      !linkInput ||
+      !tagColorInput
+    ) {
+      return;
+    }
+
+    form.reset();
+    this.setTaskFormError("");
+
+    const taskToEdit =
+      typeof taskId === "string" && taskId
+        ? this.tasks.find((task) => task.id === taskId)
+        : null;
+
+    if (taskToEdit) {
+      this.editingTaskId = taskToEdit.id;
+      this.draftTags = normalizeTaskTags(taskToEdit.tags).map((tag) => ({
+        ...tag,
+      }));
+      nameInput.value = taskToEdit.name || "";
+      descriptionInput.value = taskToEdit.description || "";
+      linkInput.value = taskToEdit.link || "";
+      tagColorInput.value =
+        this.draftTags.length > 0
+          ? normalizeTagColor(this.draftTags[this.draftTags.length - 1].color)
+          : DEFAULT_TAG_COLOR;
+      this.setModalMode("edit");
+    } else {
+      this.editingTaskId = null;
+      this.draftTags = [];
+      tagColorInput.value =
+        TAG_COLOR_OPTIONS[this.nextTagColorIndex % TAG_COLOR_OPTIONS.length];
+      this.nextTagColorIndex += 1;
+      this.setModalMode("create");
+    }
+
+    this.renderDraftTags();
+
+    modalBackdrop.classList.add("is-visible");
+    modalBackdrop.setAttribute("aria-hidden", "false");
+    document.body.classList.add("task-modal-open");
+    nameInput.focus();
+  }
+
+  closeTaskModal() {
+    const { modalBackdrop } = this.taskElements;
+    if (!modalBackdrop) {
+      return;
+    }
+    this.editingTaskId = null;
+    this.setModalMode("create");
+    modalBackdrop.classList.remove("is-visible");
+    modalBackdrop.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("task-modal-open");
+  }
+
+  normalizeTaskLink(rawLink) {
+    const value = rawLink.trim();
+    if (!value) {
+      return "";
+    }
+
+    const candidates = [value, `https://${value}`];
+
+    for (const candidate of candidates) {
+      try {
+        const parsed = new URL(candidate);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+          return parsed.href;
+        }
+      } catch {
+        // Try next candidate.
+      }
+    }
+
+    return null;
+  }
+
+  hexToRgba(hexColor, alpha) {
+    const normalized = normalizeTagColor(hexColor);
+    const red = Number.parseInt(normalized.slice(1, 3), 16);
+    const green = Number.parseInt(normalized.slice(3, 5), 16);
+    const blue = Number.parseInt(normalized.slice(5, 7), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  }
+
+  createTag(rawName, rawColor) {
+    const name = normalizeTagName(rawName);
+    if (!name) {
+      return null;
+    }
+    const color = normalizeTagColor(rawColor);
+    return {
+      id: buildTagId(name, color),
+      name,
+      color,
+    };
+  }
+
+  handleAddTagFromForm() {
+    const { tagNameInput, tagColorInput } = this.taskElements;
+    if (!tagNameInput || !tagColorInput) {
+      return;
+    }
+
+    const newTag = this.createTag(tagNameInput.value, tagColorInput.value);
+    if (!newTag) {
+      this.setTaskFormError("Informe o nome da tag para adicionar.");
+      return;
+    }
+
+    const alreadyExists = this.draftTags.some((tag) => tag.id === newTag.id);
+    if (alreadyExists) {
+      this.setTaskFormError("Essa tag ja foi adicionada.");
+      tagNameInput.value = "";
+      tagNameInput.focus();
+      return;
+    }
+
+    this.draftTags = [...this.draftTags, newTag];
+    this.setTaskFormError("");
+    tagNameInput.value = "";
+    tagNameInput.focus();
+    this.renderDraftTags();
+  }
+
+  removeDraftTag(tagId) {
+    this.draftTags = this.draftTags.filter((tag) => tag.id !== tagId);
+    this.renderDraftTags();
+  }
+
+  createTagBadgeElement(tag, className) {
+    const badge = document.createElement("span");
+    badge.className = className;
+    badge.textContent = tag.name;
+    badge.style.borderColor = tag.color;
+    badge.style.backgroundColor = this.hexToRgba(tag.color, 0.13);
+    badge.style.color = tag.color;
+    return badge;
+  }
+
+  getTaskActionIcon(type) {
+    if (type === "edit") {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 20h9" />
+          <path d="m16.5 3.5 4 4L7 21H3v-4L16.5 3.5z" />
+        </svg>
+      `;
+    }
+
+    if (type === "delete") {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 6h18" />
+          <path d="M8 6V4h8v2" />
+          <path d="M19 6l-1 14H6L5 6" />
+          <path d="M10 11v6M14 11v6" />
+        </svg>
+      `;
+    }
+
+    return `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 3h7v7" />
+        <path d="M10 14 21 3" />
+        <path d="M21 14v5a2 2 0 0 1-2 2h-5" />
+        <path d="M10 21H5a2 2 0 0 1-2-2v-5" />
+      </svg>
+    `;
+  }
+
+  renderDraftTags() {
+    const selectedTagsContainer = this.taskElements.selectedTagsContainer;
+    if (!selectedTagsContainer) {
+      return;
+    }
+
+    selectedTagsContainer.textContent = "";
+
+    if (!this.draftTags.length) {
+      const empty = document.createElement("p");
+      empty.className = "task-tag-empty";
+      empty.textContent = "Nenhuma tag adicionada.";
+      selectedTagsContainer.appendChild(empty);
+      return;
+    }
+
+    this.draftTags.forEach((tag) => {
+      const chip = this.createTagBadgeElement(tag, "task-tag-chip");
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "task-tag-remove";
+      removeButton.textContent = "x";
+      removeButton.setAttribute("aria-label", `Remover tag ${tag.name}`);
+      removeButton.addEventListener("click", () => this.removeDraftTag(tag.id));
+      chip.appendChild(removeButton);
+      selectedTagsContainer.appendChild(chip);
+    });
+  }
+
+  getAllTagsFromTasks() {
+    const allTags = new Map();
+    this.tasks.forEach((task) => {
+      if (!Array.isArray(task.tags)) {
+        return;
+      }
+      task.tags.forEach((tag) => {
+        if (!allTags.has(tag.id)) {
+          allTags.set(tag.id, tag);
+        }
+      });
+    });
+
+    return Array.from(allTags.values()).sort((left, right) =>
+      left.name.localeCompare(right.name)
+    );
+  }
+
+  getFilteredTasks() {
+    if (this.activeTagFilterId === "all") {
+      return this.tasks;
+    }
+
+    return this.tasks.filter((task) =>
+      Array.isArray(task.tags)
+        ? task.tags.some((tag) => tag.id === this.activeTagFilterId)
+        : false
+    );
+  }
+
+  renderTagFilters() {
+    const tagFiltersContainer = this.taskElements.tagFiltersContainer;
+    if (!tagFiltersContainer) {
+      return;
+    }
+
+    const availableTags = this.getAllTagsFromTasks();
+    if (
+      this.activeTagFilterId !== "all" &&
+      !availableTags.some((tag) => tag.id === this.activeTagFilterId)
+    ) {
+      this.activeTagFilterId = "all";
+    }
+
+    tagFiltersContainer.textContent = "";
+
+    const allButton = document.createElement("button");
+    allButton.type = "button";
+    allButton.className = `task-filter-chip${this.activeTagFilterId === "all" ? " is-active" : ""}`;
+    allButton.textContent = "Todas";
+    allButton.addEventListener("click", () => {
+      this.activeTagFilterId = "all";
+      this.renderTasks();
+    });
+    tagFiltersContainer.appendChild(allButton);
+
+    availableTags.forEach((tag) => {
+      const filterButton = document.createElement("button");
+      filterButton.type = "button";
+      filterButton.className = `task-filter-chip${this.activeTagFilterId === tag.id ? " is-active" : ""}`;
+      filterButton.textContent = tag.name;
+      filterButton.style.borderColor = tag.color;
+      filterButton.style.color = tag.color;
+      filterButton.style.backgroundColor = this.hexToRgba(
+        tag.color,
+        this.activeTagFilterId === tag.id ? 0.2 : 0.1
+      );
+      filterButton.addEventListener("click", () => {
+        this.activeTagFilterId = tag.id;
+        this.renderTasks();
+      });
+      tagFiltersContainer.appendChild(filterButton);
+    });
+  }
+
+  handleTaskSubmit(event) {
+    event.preventDefault();
+
+    const { form, nameInput, descriptionInput, linkInput } = this.taskElements;
+    if (!form || !nameInput || !descriptionInput || !linkInput) {
+      return;
+    }
+
+    const name = nameInput.value.trim();
+    const description = descriptionInput.value.trim();
+    const rawLink = linkInput.value.trim();
+
+    if (!name || !description) {
+      this.setTaskFormError("Preencha nome e descricao da task.");
+      return;
+    }
+
+    const link = this.normalizeTaskLink(rawLink);
+    if (rawLink && !link) {
+      this.setTaskFormError("Informe um link valido. Ex.: https://exemplo.com");
+      return;
+    }
+
+    if (this.editingTaskId) {
+      let updated = false;
+      this.tasks = this.tasks.map((task) => {
+        if (task.id !== this.editingTaskId) {
+          return task;
+        }
+
+        updated = true;
+        return {
+          ...task,
+          name,
+          description,
+          link,
+          tags: [...this.draftTags],
+        };
+      });
+
+      if (!updated) {
+        this.setTaskFormError("Nao foi possivel encontrar a task para editar.");
+        return;
+      }
+    } else {
+      this.tasks = [
+        {
+          id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+          name,
+          description,
+          link,
+          createdAt: new Date().toISOString(),
+          tags: [...this.draftTags],
+        },
+        ...this.tasks,
+      ].slice(0, MAX_TASKS);
+    }
+
+    saveTasksToLocalStorage(this.tasks);
+    this.setTaskFormError("");
+    this.renderTasks();
+    this.closeTaskModal();
+    form.reset();
+    this.draftTags = [];
+    this.renderDraftTags();
+  }
+
+  removeTask(taskId) {
+    if (typeof taskId !== "string" || !taskId) {
+      return;
+    }
+
+    const taskToRemove = this.tasks.find((task) => task.id === taskId);
+    if (!taskToRemove) {
+      return;
+    }
+
+    const shouldRemove = window.confirm(
+      `Remover a task "${taskToRemove.name}"?`
+    );
+    if (!shouldRemove) {
+      return;
+    }
+
+    this.tasks = this.tasks.filter((task) => task.id !== taskId);
+    saveTasksToLocalStorage(this.tasks);
+
+    if (this.editingTaskId === taskId) {
+      this.closeTaskModal();
+    }
+
+    this.renderTasks();
+  }
+
+  renderTasks() {
+    const list = this.taskElements.list;
+    if (!list) {
+      return;
+    }
+
+    this.renderTagFilters();
+
+    list.textContent = "";
+    const filteredTasks = this.getFilteredTasks();
+
+    if (!this.tasks.length || !filteredTasks.length) {
+      const empty = document.createElement("p");
+      empty.className = "task-empty";
+      empty.textContent = this.tasks.length
+        ? "Nenhuma task com a tag selecionada."
+        : "Nenhuma task cadastrada ainda.";
+      list.appendChild(empty);
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    filteredTasks.forEach((task) => {
+      const item = document.createElement("article");
+      item.className = "task-item";
+
+      const textContainer = document.createElement("div");
+      textContainer.className = "task-text";
+
+      const name = document.createElement("h3");
+      name.className = "task-name";
+      name.textContent = task.name;
+
+      const description = document.createElement("p");
+      description.className = "task-description";
+      description.textContent = task.description;
+
+      textContainer.appendChild(name);
+      textContainer.appendChild(description);
+
+      if (Array.isArray(task.tags) && task.tags.length) {
+        const tagsContainer = document.createElement("div");
+        tagsContainer.className = "task-tags";
+        task.tags.forEach((tag) => {
+          tagsContainer.appendChild(this.createTagBadgeElement(tag, "task-tag"));
+        });
+        textContainer.appendChild(tagsContainer);
+      }
+
+      const actionsContainer = document.createElement("div");
+      actionsContainer.className = "task-item-actions";
+
+      const editButton = document.createElement("button");
+      
+      const normalizedLink = this.normalizeTaskLink(task.link || "");
+      if (normalizedLink) {
+        const linkButton = document.createElement("a");
+        linkButton.className = "btn task-icon-btn task-link";
+        linkButton.href = normalizedLink;
+        linkButton.target = "_blank";
+        linkButton.rel = "noopener noreferrer";
+        linkButton.setAttribute("aria-label", "Abrir link da task");
+        linkButton.title = "Abrir link";
+        linkButton.innerHTML = this.getTaskActionIcon("link");
+        actionsContainer.appendChild(linkButton);
+      }
+      
+      editButton.type = "button";
+      editButton.className = "btn task-icon-btn task-edit";
+      editButton.setAttribute("aria-label", "Editar task");
+      editButton.title = "Editar";
+      editButton.innerHTML = this.getTaskActionIcon("edit");
+      editButton.addEventListener("click", () => this.openTaskModal(task.id));
+      actionsContainer.appendChild(editButton);
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "btn task-icon-btn task-delete";
+      deleteButton.setAttribute("aria-label", "Remover task");
+      deleteButton.title = "Remover";
+      deleteButton.innerHTML = this.getTaskActionIcon("delete");
+      deleteButton.addEventListener("click", () => this.removeTask(task.id));
+      actionsContainer.appendChild(deleteButton);
+
+
+      item.appendChild(textContainer);
+      item.appendChild(actionsContainer);
+      fragment.appendChild(item);
+    });
+
+    list.appendChild(fragment);
   }
 }
 

@@ -11,7 +11,6 @@
   </head>
   <body>
     <div class="container">
-      <!-- Theme Toggle Button -->
       <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">
         <span class="toggle-icon">
           <svg
@@ -43,62 +42,169 @@
       </button>
 
       <div class="content">
-        <div class="container">
-          <div class="content">
-            <div class="blocked-icon">
-              <svg
-                width="64"
-                height="64"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="m4.9 4.9 14.2 14.2" />
-              </svg>
-            </div>
+        <div class="blocked-icon">
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="m4.9 4.9 14.2 14.2" />
+          </svg>
+        </div>
 
-            <h1 class="title">Access Blocked</h1>
-            <p class="subtitle">
-              This site was blocked to help you stay focused
-            </p>
+        <h1 class="title">Access Blocked</h1>
+        <p class="subtitle">This site was blocked to help you stay focused</p>
 
-            <div class="stats">
-              <div class="stat">
-                <span class="stat-number" id="timeBlocked">0</span>
-                <span class="stat-label">Total bloqueios</span>
-              </div>
-              <span class="stat-divider">|</span>
-              <div class="stat">
-                <span class="stat-number" id="blocksToday">0</span>
-                <span class="stat-label">Hoje</span>
-              </div>
-              <div class="stat stat-wide">
-                <span class="stat-value" id="topBlockedSite">Sem dados</span>
-                <span class="stat-label" id="topBlockedCount">Mais bloqueado</span>
-              </div>
-            </div>
-
-            <div class="quote">
-              <p id="motivationalText">John 3:16 — "For God so loved the world that He gave His one and only Son, that whoever believes in Him shall not perish but have eternal life."</p>
-            </div>
-
-            <div class="footer">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path d="m4.9 4.9 14.2 14.2" />
-              </svg>
-              <span>Focus Blocker</span>
-            </div>
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-number" id="timeBlocked">0</span>
+            <span class="stat-label">Total bloqueios</span>
           </div>
+          <span class="stat-divider">|</span>
+          <div class="stat">
+            <span class="stat-number" id="blocksToday">0</span>
+            <span class="stat-label">Hoje</span>
+          </div>
+          <div class="stat stat-wide">
+            <span class="stat-value" id="topBlockedSite">Sem dados</span>
+            <span class="stat-label" id="topBlockedCount">Mais bloqueado</span>
+          </div>
+        </div>
+
+        <div class="quote">
+          <p id="motivationalText">
+            John 3:16 — "For God so loved the world that He gave His one and only
+            Son, that whoever believes in Him shall not perish but have eternal
+            life."
+          </p>
+        </div>
+
+        <section class="tasks" aria-labelledby="tasksTitle">
+          <h2 class="tasks-title" id="tasksTitle">TODO List</h2>
+          <p class="tasks-subtitle">
+            Cadastre tasks para voltar rapido ao que realmente importa.
+          </p>
+          <div class="task-filters" id="taskFilters">
+            <span class="task-filter-label">Filtrar por tag:</span>
+            <div class="task-filter-chips" id="taskTagFilters"></div>
+          </div>
+          <div class="task-list" id="taskList" aria-live="polite"></div>
+          <div class="task-actions">
+            <button
+              class="btn btn-primary task-open-modal"
+              id="openTaskModalBtn"
+              type="button"
+            >
+              Adicionar task
+            </button>
+          </div>
+        </section>
+
+        <div class="task-modal-backdrop" id="taskModalBackdrop" aria-hidden="true">
+          <div
+            class="task-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="taskModalTitle"
+          >
+            <div class="task-modal-header">
+              <h3 class="task-modal-title" id="taskModalTitle">Nova task</h3>
+              <button
+                class="task-modal-close"
+                id="closeTaskModalBtn"
+                type="button"
+                aria-label="Fechar modal"
+              >
+                x
+              </button>
+            </div>
+
+            <form id="taskForm" class="task-form">
+              <label class="task-label" for="taskName">Nome da task</label>
+              <input
+                class="task-input"
+                id="taskName"
+                name="taskName"
+                type="text"
+                maxlength="100"
+                required
+              />
+
+              <label class="task-label" for="taskDescription">Descricao</label>
+              <textarea
+                class="task-input task-textarea"
+                id="taskDescription"
+                name="taskDescription"
+                rows="3"
+                maxlength="300"
+                required
+              ></textarea>
+
+              <label class="task-label" for="taskLink">Link (opcional)</label>
+              <input
+                class="task-input"
+                id="taskLink"
+                name="taskLink"
+                type="text"
+                maxlength="500"
+                placeholder="https://..."
+              />
+
+              <label class="task-label" for="taskTagName">Tags com cor</label>
+              <div class="task-tag-builder">
+                <input
+                  class="task-input"
+                  id="taskTagName"
+                  name="taskTagName"
+                  type="text"
+                  maxlength="30"
+                  placeholder="Nome da tag"
+                />
+                <input
+                  class="task-color-input"
+                  id="taskTagColor"
+                  name="taskTagColor"
+                  type="color"
+                  value="#2563eb"
+                  aria-label="Cor da tag"
+                />
+                <button class="btn btn-secondary task-tag-add" id="addTaskTagBtn" type="button">
+                  Adicionar tag
+                </button>
+              </div>
+
+              <div class="task-selected-tags" id="taskSelectedTags"></div>
+              <p class="task-form-error" id="taskFormError" role="status" aria-live="polite"></p>
+
+              <div class="task-modal-actions">
+                <button class="btn btn-secondary" id="cancelTaskModalBtn" type="button">
+                  Cancelar
+                </button>
+                <button class="btn btn-primary task-submit" id="taskSaveBtn" type="submit">
+                  Salvar task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="footer">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="m4.9 4.9 14.2 14.2" />
+          </svg>
+          <span>Focus Blocker</span>
         </div>
       </div>
     </div>
@@ -107,4 +213,3 @@
     <script src="../theme-toggle/theme-toggle.js"></script>
   </body>
 </html>
-

@@ -706,7 +706,7 @@ body {
   min-width: 0;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  align-items: center;
+  align-items: stretch;
   justify-items: center;
   height: 100%;
 }
@@ -720,12 +720,14 @@ body {
 .chart-bar-track {
   width: 100%;
   max-width: 28px;
+  height: 100%;
   background: var(--background);
   border-radius: 999px;
   border: 1px solid var(--border-light);
   padding: 0.25rem;
   display: flex;
   align-items: flex-end;
+  align-self: stretch;
 }
 
 .chart-bar-fill {
