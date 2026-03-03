@@ -192,6 +192,35 @@
           </div>
         </div>
 
+        <div
+          class="task-confirm-backdrop"
+          id="taskDeleteModalBackdrop"
+          aria-hidden="true"
+        >
+          <div
+            class="task-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="taskDeleteModalTitle"
+            aria-describedby="taskDeleteModalDescription"
+          >
+            <h3 class="task-confirm-title" id="taskDeleteModalTitle">
+              Confirmar exclusao
+            </h3>
+            <p class="task-confirm-description" id="taskDeleteModalDescription">
+              Essa task sera removida permanentemente.
+            </p>
+            <div class="task-confirm-actions">
+              <button class="btn btn-secondary" id="cancelDeleteTaskBtn" type="button">
+                Cancelar
+              </button>
+              <button class="btn btn-danger" id="confirmDeleteTaskBtn" type="button">
+                Excluir task
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="footer">
           <svg
             width="16"

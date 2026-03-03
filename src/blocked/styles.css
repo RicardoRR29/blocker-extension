@@ -2,6 +2,7 @@
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --danger: #dc2626;
+  --danger-hover: #b91c1c;
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --text-muted: #9ca3af;
@@ -388,7 +389,8 @@ body {
   margin: 0;
 }
 
-.task-modal-backdrop {
+.task-modal-backdrop,
+.task-confirm-backdrop {
   position: fixed;
   inset: 0;
   display: flex;
@@ -403,7 +405,8 @@ body {
   transition: opacity 0.22s ease, visibility 0s linear 0.22s;
 }
 
-.task-modal-backdrop.is-visible {
+.task-modal-backdrop.is-visible,
+.task-confirm-backdrop.is-visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -427,6 +430,43 @@ body {
 .task-modal-backdrop.is-visible .task-modal {
   opacity: 1;
   transform: translateY(0) scale(1);
+}
+
+.task-confirm-modal {
+  width: min(100%, 420px);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 1.1rem;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.task-confirm-backdrop.is-visible .task-confirm-modal {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.task-confirm-title {
+  font-size: 1.05rem;
+  margin-bottom: 0.45rem;
+}
+
+.task-confirm-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.task-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
 }
 
 .task-modal-header {
@@ -588,6 +628,15 @@ body.task-modal-open {
   border-color: var(--border);
 }
 
+.btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: var(--danger-hover);
+}
+
 /* Footer */
 .footer {
   color: var(--text-muted);
@@ -723,6 +772,16 @@ body.task-modal-open {
   }
 
   .task-modal-actions .btn {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .task-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .task-confirm-actions .btn {
     width: 100%;
     max-width: none;
     margin: 0;

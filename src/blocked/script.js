@@ -427,6 +427,7 @@ class BlockedPage {
     this.taskElements = {};
     this.draftTags = [];
     this.editingTaskId = null;
+    this.pendingDeleteTaskId = null;
     this.activeTagFilterId = "all";
     this.nextTagColorIndex = 0;
     this.init();
@@ -535,6 +536,15 @@ class BlockedPage {
     const tagFiltersContainer = document.getElementById("taskTagFilters");
     const modalTitle = document.getElementById("taskModalTitle");
     const saveTaskButton = document.getElementById("taskSaveBtn");
+    const deleteModalBackdrop = document.getElementById(
+      "taskDeleteModalBackdrop"
+    );
+    const deleteModalDescription = document.getElementById(
+      "taskDeleteModalDescription"
+    );
+    const confirmDeleteTaskButton =
+      document.getElementById("confirmDeleteTaskBtn");
+    const cancelDeleteTaskButton = document.getElementById("cancelDeleteTaskBtn");
 
     if (
       !form ||
@@ -553,7 +563,11 @@ class BlockedPage {
       !selectedTagsContainer ||
       !tagFiltersContainer ||
       !modalTitle ||
-      !saveTaskButton
+      !saveTaskButton ||
+      !deleteModalBackdrop ||
+      !deleteModalDescription ||
+      !confirmDeleteTaskButton ||
+      !cancelDeleteTaskButton
     ) {
       return;
     }
@@ -576,6 +590,10 @@ class BlockedPage {
       tagFiltersContainer,
       modalTitle,
       saveTaskButton,
+      deleteModalBackdrop,
+      deleteModalDescription,
+      confirmDeleteTaskButton,
+      cancelDeleteTaskButton,
     };
 
     form.addEventListener("submit", (event) => this.handleTaskSubmit(event));
@@ -595,8 +613,26 @@ class BlockedPage {
         this.closeTaskModal();
       }
     });
+    deleteModalBackdrop.addEventListener("click", (event) => {
+      if (event.target === deleteModalBackdrop) {
+        this.closeDeleteTaskModal();
+      }
+    });
+    confirmDeleteTaskButton.addEventListener("click", () =>
+      this.confirmDeleteTask()
+    );
+    cancelDeleteTaskButton.addEventListener("click", () =>
+      this.closeDeleteTaskModal()
+    );
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && this.isTaskModalOpen()) {
+      if (event.key !== "Escape") {
+        return;
+      }
+      if (this.isDeleteTaskModalOpen()) {
+        this.closeDeleteTaskModal();
+        return;
+      }
+      if (this.isTaskModalOpen()) {
         this.closeTaskModal();
       }
     });
@@ -618,6 +654,15 @@ class BlockedPage {
 
   isTaskModalOpen() {
     return this.taskElements.modalBackdrop?.classList.contains("is-visible");
+  }
+
+  isDeleteTaskModalOpen() {
+    return this.taskElements.deleteModalBackdrop?.classList.contains("is-visible");
+  }
+
+  syncModalBodyState() {
+    const shouldLockBody = this.isTaskModalOpen() || this.isDeleteTaskModalOpen();
+    document.body.classList.toggle("task-modal-open", shouldLockBody);
   }
 
   setModalMode(mode = "create") {
@@ -686,7 +731,7 @@ class BlockedPage {
 
     modalBackdrop.classList.add("is-visible");
     modalBackdrop.setAttribute("aria-hidden", "false");
-    document.body.classList.add("task-modal-open");
+    this.syncModalBodyState();
     nameInput.focus();
   }
 
@@ -699,7 +744,47 @@ class BlockedPage {
     this.setModalMode("create");
     modalBackdrop.classList.remove("is-visible");
     modalBackdrop.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("task-modal-open");
+    this.syncModalBodyState();
+  }
+
+  openDeleteTaskModal(taskId) {
+    if (typeof taskId !== "string" || !taskId) {
+      return;
+    }
+
+    const taskToRemove = this.tasks.find((task) => task.id === taskId);
+    if (!taskToRemove) {
+      return;
+    }
+
+    const {
+      deleteModalBackdrop,
+      deleteModalDescription,
+      confirmDeleteTaskButton,
+    } = this.taskElements;
+    if (!deleteModalBackdrop || !deleteModalDescription || !confirmDeleteTaskButton) {
+      return;
+    }
+
+    this.pendingDeleteTaskId = taskToRemove.id;
+    deleteModalDescription.textContent = `Deseja remover a task "${taskToRemove.name}"?`;
+    deleteModalBackdrop.classList.add("is-visible");
+    deleteModalBackdrop.setAttribute("aria-hidden", "false");
+    this.syncModalBodyState();
+    confirmDeleteTaskButton.focus();
+  }
+
+  closeDeleteTaskModal() {
+    const { deleteModalBackdrop, deleteModalDescription } = this.taskElements;
+    if (!deleteModalBackdrop || !deleteModalDescription) {
+      return;
+    }
+
+    this.pendingDeleteTaskId = null;
+    deleteModalDescription.textContent = "Essa task sera removida permanentemente.";
+    deleteModalBackdrop.classList.remove("is-visible");
+    deleteModalBackdrop.setAttribute("aria-hidden", "true");
+    this.syncModalBodyState();
   }
 
   normalizeTaskLink(rawLink) {
@@ -990,19 +1075,13 @@ class BlockedPage {
   }
 
   removeTask(taskId) {
+    this.openDeleteTaskModal(taskId);
+  }
+
+  confirmDeleteTask() {
+    const taskId = this.pendingDeleteTaskId;
     if (typeof taskId !== "string" || !taskId) {
-      return;
-    }
-
-    const taskToRemove = this.tasks.find((task) => task.id === taskId);
-    if (!taskToRemove) {
-      return;
-    }
-
-    const shouldRemove = window.confirm(
-      `Remover a task "${taskToRemove.name}"?`
-    );
-    if (!shouldRemove) {
+      this.closeDeleteTaskModal();
       return;
     }
 
@@ -1013,6 +1092,7 @@ class BlockedPage {
       this.closeTaskModal();
     }
 
+    this.closeDeleteTaskModal();
     this.renderTasks();
   }
 
